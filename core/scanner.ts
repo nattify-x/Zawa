@@ -3,7 +3,7 @@
  * Pure TypeScript scanning logic without VS Code imports.
  */
 
-import { isDocumentedExampleKey, isJwtExpired } from './entropy';
+import { isDocumentedExampleKey, isJwtExpired, calculateShannonEntropy, hasExactKnownWord } from './entropy';
 import { DEFAULT_RULES } from './rules';
 import { Confidence, Finding, Rule } from './types';
 
@@ -195,6 +195,180 @@ function getPositionFromOffset(lineOffsets: number[], offset: number): { line: n
 }
 
 /**
+ * Generates a concise "why" explanation for a finding without revealing raw secrets.
+ * Example: "name matches 'secret'; entropy 4.3; length 40"
+ */
+export function generateFindingWhy(
+  rule: Rule,
+  matchedString: string,
+  captureGroups: string[],
+  extraMessage?: string
+): string {
+  let why = '';
+
+  switch (rule.id) {
+    case 'ZAWA-001': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'AKIA'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-002': {
+      const secret = captureGroups[0] || matchedString;
+      const prefix = secret.startsWith('github_pat_') ? 'github_pat_' : secret.slice(0, 4);
+      why = `prefix '${prefix}'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-003': {
+      why = `PEM private key block; length ${matchedString.length}`;
+      break;
+    }
+    case 'ZAWA-004': {
+      const secret = captureGroups[0] || '';
+      const ent = calculateShannonEntropy(secret).toFixed(1);
+      const nameMatch = matchedString.match(/([a-zA-Z0-9_$.]+)\s*[:=]/);
+      const name = nameMatch ? nameMatch[1].toLowerCase() : 'password';
+      const word = name.includes('password') ? 'password' : (name.includes('passwd') ? 'passwd' : (name.includes('pwd') ? 'pwd' : 'pass'));
+      why = `name matches '${word}'; entropy ${ent}; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-005': {
+      const secret = captureGroups[0] || captureGroups[1] || '';
+      const ent = calculateShannonEntropy(secret).toFixed(1);
+      const idMatch = matchedString.match(/["']?([a-zA-Z0-9_$.:-]+)["']?\s*[:=]/);
+      const fullName = idMatch ? idMatch[1] : '';
+      const lastSegment = (fullName.split(/[.:]/).pop() || fullName).toLowerCase();
+      const candidates = [
+        'secret_key_base', 'secretkeybase', 'session_secret', 'sessionsecret', 'cookie_secret', 'cookiesecret',
+        'app_secret', 'appsecret', 'signing_key', 'signingkey', 'encryption_key', 'encryptionkey',
+        'api_key', 'apikey', 'secret_key', 'secretkey', 'auth_token', 'authtoken', 'access_token', 'accesstoken',
+        'jwt_secret', 'jwtsecret', 'private_key', 'privatekey', 'client_secret', 'clientsecret',
+        'totp_secret', 'totpsecret', 'otp_secret', 'otpsecret',
+        'secret', 'token', 'key'
+      ];
+      let matchedKw = 'secret';
+      for (const cand of candidates) {
+        if (lastSegment.includes(cand)) {
+          matchedKw = cand;
+          break;
+        }
+      }
+      why = `name matches '${matchedKw}'; entropy ${ent}; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-006': {
+      const secret = captureGroups[0] || matchedString;
+      const prefix = secret.startsWith('sk_live_') ? 'sk_live_' : 'rk_live_';
+      why = `prefix '${prefix}'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-007': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'xox'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-008': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'AIza'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-009': {
+      const secret = captureGroups[0] || matchedString;
+      why = `JWT format; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-010': {
+      why = `GCP service account credential structure`;
+      break;
+    }
+    case 'ZAWA-011': {
+      const pass = captureGroups[0] || '';
+      const ent = calculateShannonEntropy(pass).toFixed(1);
+      why = `embedded database password; entropy ${ent}; length ${pass.length}`;
+      break;
+    }
+    case 'ZAWA-012': {
+      why = `unparameterized SQL query concatenation`;
+      break;
+    }
+    case 'ZAWA-013': {
+      why = `OS command execution concatenation`;
+      break;
+    }
+    case 'ZAWA-014': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'sk-'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-015': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'sk-ant-'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-016': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'hf_'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-017': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'gsk_'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-018': {
+      const secret = captureGroups[0] || matchedString;
+      why = `prefix 'r8_'; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-019': {
+      const secret = captureGroups[0] || captureGroups[1] || matchedString;
+      why = `prefix matches Mistral API key; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-020': {
+      const secret = captureGroups[0] || captureGroups[1] || matchedString;
+      why = `prefix matches Cohere API key; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-021': {
+      why = `.env file exists and is not covered by .gitignore`;
+      break;
+    }
+    case 'ZAWA-022': {
+      const secret = captureGroups[1] || captureGroups[2] || '';
+      const ent = calculateShannonEntropy(secret).toFixed(1);
+      const nameMatch = matchedString.match(/(?:typeof\s+)?([a-zA-Z0-9_$.]+)/);
+      const name = nameMatch ? nameMatch[1].toLowerCase() : 'credential';
+      const words = ['password', 'passwd', 'pwd', 'pass', 'token', 'secret', 'apikey', 'apisecret', 'secretkey', 'authtoken', 'accesstoken', 'totpsecret', 'otpsecret'];
+      const matched = words.find((w) => name.includes(w)) || 'credential';
+      why = `comparison matches '${matched}'; entropy ${ent}; length ${secret.length}`;
+      break;
+    }
+    case 'ZAWA-023': {
+      const secret = captureGroups[0] || '';
+      const ent = calculateShannonEntropy(secret).toFixed(1);
+      const idMatch = matchedString.match(/["']?([a-zA-Z0-9_$.:-]+)["']?\s*(?:=|:=|:|=>)/);
+      const fullName = idMatch ? idMatch[1] : '';
+      const lastSegment = (fullName.split(/[.:]/).pop() || fullName).toLowerCase();
+      const words = ['secret', 'token', 'passwd', 'password', 'credential', 'apikey', 'private'];
+      const matched = words.find((w) => lastSegment.includes(w)) || 'secret';
+      why = `name matches '${matched}'; entropy ${ent}; length ${secret.length}`;
+      break;
+    }
+    default: {
+      const secret = captureGroups[0] || matchedString;
+      const ent = calculateShannonEntropy(secret).toFixed(1);
+      why = `pattern match; entropy ${ent}; length ${secret.length}`;
+      break;
+    }
+  }
+
+  if (extraMessage) {
+    return `${why}; ${extraMessage}`;
+  }
+  return why;
+}
+
+/**
  * Scans a string of text against security rules and returns findings.
  *
  * Guarantees:
@@ -279,6 +453,13 @@ export function scanText(
         continue;
       }
 
+      // ZAWA-023: Skip if another rule already reported the same line
+      if (rule.id === 'ZAWA-023') {
+        if (findings.some((f) => f.line === startPos.line)) {
+          continue;
+        }
+      }
+
       // Format snippet
       const captureGroups = match.slice(1);
       let snippet = rule.formatSnippet
@@ -287,6 +468,14 @@ export function scanText(
 
       // Findings in test/fixture or doc/template paths have their confidence lowered by one level
       let confidence = shouldDemoteConfidence ? lowerConfidence(rule.confidence) : rule.confidence;
+
+      // ZAWA-023: Medium confidence if the name has an exact known word, otherwise low
+      if (rule.id === 'ZAWA-023') {
+        const idMatch = matchedString.match(/["']?([a-zA-Z0-9_$.:-]+)["']?\s*(?:=|:=|:|=>)/);
+        const identifier = idMatch ? idMatch[1] : '';
+        const baseConfidence: Confidence = hasExactKnownWord(identifier) ? 'medium' : 'low';
+        confidence = shouldDemoteConfidence ? lowerConfidence(baseConfidence) : baseConfidence;
+      }
 
       // Documented example keys: report at low confidence with "documented example key"
       let extraMessage: string | undefined;
@@ -304,6 +493,8 @@ export function scanText(
         snippet = `${snippet} (expired)`;
       }
 
+      const findingWhy = generateFindingWhy(rule, matchedString, captureGroups, extraMessage);
+
       findings.push({
         ruleId: rule.id,
         name: rule.name,
@@ -316,7 +507,7 @@ export function scanText(
         endLine: endPos.line,
         endColumn: endPos.column,
         snippet,
-        message: extraMessage,
+        message: findingWhy,
       });
 
       // Stop scanning this rule if cap reached

@@ -447,7 +447,11 @@ async function handleStagedScan(): Promise<void> {
     for (const f of highFindings) {
       console.error(`  [HIGH] ${f.ruleId}: ${f.ruleName} (${f.cwe}, CVSS ${f.cvss})`);
       console.error(`    Location: ${f.file}:${f.line}${f.column ? `:${f.column}` : ''}`);
-      console.error(`    Snippet:  ${f.snippet}\n`);
+      console.error(`    Snippet:  ${f.snippet}`);
+      if (f.message) {
+        console.error(`    Why:      ${f.message}`);
+      }
+      console.error('');
     }
 
     console.error('----------------------------------------------------------------');
@@ -648,7 +652,11 @@ function printTextReport(result: CliResult): void {
 
       console.log(`${sevBadge} ${f.ruleId}: ${f.ruleName} (${f.cwe}, CVSS ${f.cvss}) ${confidenceBadge}`);
       console.log(`  Location: ${f.file}:${f.line}${f.column ? `:${f.column}` : ''}`);
-      console.log(`  Snippet:  ${f.snippet}\n`);
+      console.log(`  Snippet:  ${f.snippet}`);
+      if (f.message) {
+        console.log(`  Why:      ${f.message}`);
+      }
+      console.log();
     }
   }
 

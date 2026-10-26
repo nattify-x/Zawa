@@ -4,7 +4,7 @@
  * All regex patterns MUST include the global ('g') flag and strictly bounded quantifiers.
  */
 
-import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid, isGenericRuleIgnored } from './entropy';
+import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid, isGenericRuleIgnored, isUrl, isPath, calculateShannonEntropy } from './entropy';
 import { Rule } from './types';
 
 export function maskSecret(secret: string): string {
@@ -112,10 +112,10 @@ export const DEFAULT_RULES: Rule[] = [
     confidence: 'medium',
     cwe: 'CWE-798',
     cvss: 7.5,
-    pattern: /(?:["']?\b[a-zA-Z0-9_]*(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret)[a-zA-Z0-9_]*\b["']?)\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?/gi,
+    pattern: /(?:(?:["']?(?:[a-zA-Z0-9_$.:-]+(?:\.|::))[a-zA-Z0-9_]*(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret|secret_key_base|SECRET_KEY_BASE|secretKeyBase|session_secret|SESSION_SECRET|sessionSecret|cookie_secret|COOKIE_SECRET|cookieSecret|app_secret|APP_SECRET|appSecret|signing_key|SIGNING_KEY|signingKey|encryption_key|ENCRYPTION_KEY|encryptionKey)[a-zA-Z0-9_]*["']?\s*[:=]\s*["']([^"'\r\n\s]{8,256})["'])|(?:["']?\b[a-zA-Z0-9_]*(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret|secret_key_base|SECRET_KEY_BASE|secretKeyBase|session_secret|SESSION_SECRET|sessionSecret|cookie_secret|COOKIE_SECRET|cookieSecret|app_secret|APP_SECRET|appSecret|signing_key|SIGNING_KEY|signingKey|encryption_key|ENCRYPTION_KEY|encryptionKey)[a-zA-Z0-9_]*\b["']?\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?))/gi,
     description: 'High-entropy secret or API key assignment in an environment file, configuration, or code.',
     filter: (match) => {
-      const value = match[1] || '';
+      const value = match[1] || match[2] || '';
 
       // 1. Secrets must consist of printable ASCII characters
       if (/[^\x20-\x7E]/.test(value)) {
@@ -139,7 +139,12 @@ export const DEFAULT_RULES: Rule[] = [
         return false;
       }
 
-      // 5. Let specialized high-confidence rules handle their specific prefixes
+      // 5. Ignore URLs or file paths
+      if (isUrl(value) || isPath(value)) {
+        return false;
+      }
+
+      // 6. Let specialized high-confidence rules handle their specific prefixes
       if (/^(?:sk-(?!ant-)|sk-ant-|hf_|gsk_|r8_|AIza|AKIA|gh[pousr]_|github_pat_|xox[baprs]-)/.test(value)) {
         return false;
       }
@@ -147,7 +152,7 @@ export const DEFAULT_RULES: Rule[] = [
       return isValidGenericSecret(value, 3.0);
     },
     formatSnippet: (raw, groups) => {
-      const secret = groups[0];
+      const secret = groups[0] || groups[1];
       if (secret) {
         return raw.trim().replace(secret, maskSecret(secret));
       }
@@ -445,6 +450,79 @@ export const DEFAULT_RULES: Rule[] = [
         return raw.trim().replace(secret, maskSecret(secret));
       }
       return raw.trim();
+    },
+  },
+
+  // 23. High-Entropy Value in Secret-Like Name (ZAWA-023)
+  {
+    id: 'ZAWA-023',
+    name: 'High-entropy value in a secret-like name',
+    severity: 'warning',
+    confidence: 'medium',
+    cwe: 'CWE-798',
+    cvss: 7.5,
+    pattern: /(?:["']?(?:[a-zA-Z0-9_$.:-]+(?:\.|::))?[a-zA-Z0-9_.-]*(?:secret|token|passwd|password|credential|apikey|private)[a-zA-Z0-9_.-]*["']?)\s*(?:=|:=|:|=>)\s*["']([^"'\r\n\s]{24,1024})["']/gi,
+    description: 'High-entropy value in an assignment or key-value pair with a secret-like identifier.',
+    filter: (match) => {
+      const value = match[1] || '';
+
+      // 1. Must consist of printable ASCII characters
+      if (/[^\x20-\x7E]/.test(value)) {
+        return false;
+      }
+
+      // 2. Length must be at least 24 characters
+      if (value.length < 24) {
+        return false;
+      }
+
+      // 3. Shannon entropy must be at least 4.0
+      if (calculateShannonEntropy(value) < 4.0) {
+        return false;
+      }
+
+      // 4. Reject UI label / translation / message prefixes (LABEL_, INVALID_, ERROR_, etc.)
+      const idMatch = match[0].match(/["']?([a-zA-Z0-9_]+)["']?\s*(?:=|:=|:|=>)/);
+      const identifier = idMatch ? idMatch[1] : '';
+      if (/^(?:LABEL|INVALID|ERROR|TITLE|MSG|MESSAGE|DESC|DESCRIPTION|HELP|TOOLTIP|HINT|PLACEHOLDER|TEXT|BTN|BUTTON|ARIA)_/i.test(identifier)) {
+        return false;
+      }
+
+      // 5. Must not be a hex address, standard UUID, or hex hash (32, 40, 64 hex or pure hex >= 32)
+      if (isHexAddressOrHashOrUuid(value) || /^[0-9a-fA-F]{32,}$/.test(value)) {
+        return false;
+      }
+
+      // 6. Must not be a URL
+      if (isUrl(value)) {
+        return false;
+      }
+
+      // 7. Must not be a path or file reference
+      if (isPath(value)) {
+        return false;
+      }
+
+      // 8. Must not be a placeholder
+      if (isPlaceholder(value)) {
+        return false;
+      }
+
+      // 9. Must not be a code reference
+      if (isCodeReference(value)) {
+        return false;
+      }
+
+      // 10. Ignore commented lines, regexes, and concatenation
+      if (isGenericRuleIgnored(match, value)) {
+        return false;
+      }
+
+      return true;
+    },
+    formatSnippet: (raw, groups) => {
+      const secret = groups[0] || raw;
+      return raw.trim().replace(secret, maskSecret(secret));
     },
   },
 ];

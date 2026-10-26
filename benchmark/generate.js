@@ -882,6 +882,187 @@ function generateBenchmark() {
     description: 'Decoy comparison inside .rst documentation file',
   });
 
+  // File 15: Round 5A Generic Names, Property Assignments, and High-Entropy Secret-Like Names
+  buildFile('round5-secrets.ts', [
+    // True Secrets
+    {
+      id: 'TS-051',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Rails secret_key_base property assignment',
+      code: `Railsgoat.Application.config.secret_key_base = "2f1d90a26236c3245d96f5606c201a780dc9ca687e5ed82b45e211bb5dc84c1870f61ca9e002dad5dd8a149c9792d8f07f31a9575065cca064bd6af44f8750e4";`,
+    },
+    {
+      id: 'TS-052',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Nested property assignment with secret_key_base',
+      code: `config.foo.secret_key_base = "aB3$kL9#mP2@qR5!vW8*xY1^zT4&";`,
+    },
+    {
+      id: 'TS-053',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Object property assignment with secretKey',
+      code: `obj.secretKey = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#";`,
+    },
+    {
+      id: 'TS-054',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Generic name session_secret',
+      code: `export const session_secret = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#";`,
+    },
+    {
+      id: 'TS-055',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Generic name cookie_secret',
+      code: `export const cookie_secret = "kL9#mP2@qR5!vW8*xY1^zT4&aB3$";`,
+    },
+    {
+      id: 'TS-056',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Generic name app_secret',
+      code: `export const app_secret = "qR5!vW8*xY1^zT4&aB3$kL9#mP2@";`,
+    },
+    {
+      id: 'TS-057',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Generic name signing_key',
+      code: `export const signing_key = "vW8*xY1^zT4&aB3$kL9#mP2@qR5!";`,
+    },
+    {
+      id: 'TS-058',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Generic name encryption_key',
+      code: `export const encryption_key = "xY1^zT4&aB3$kL9#mP2@qR5!vW8*";`,
+    },
+    {
+      id: 'TS-059',
+      type: 'secret',
+      expectedRule: 'ZAWA-023',
+      description: 'ZAWA-023 custom webhook secret (medium confidence: exact known word)',
+      code: `const custom_webhook_secret = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#";`,
+    },
+    {
+      id: 'TS-060',
+      type: 'secret',
+      expectedRule: 'ZAWA-023',
+      description: 'ZAWA-023 name containing credential substring (low confidence: not exact known word)',
+      code: `const supercredentialxyz = "qR5!vW8*xY1^zT4&aB3$kL9#mP2@";`,
+    },
+    {
+      id: 'TS-061',
+      type: 'secret',
+      expectedRule: 'ZAWA-023',
+      description: 'ZAWA-023 user access token data (medium confidence: exact known word)',
+      code: `const user_access_token_data = "vW8*xY1^zT4&aB3$kL9#mP2@qR5!";`,
+    },
+    {
+      id: 'TS-062',
+      type: 'secret',
+      expectedRule: 'ZAWA-023',
+      description: 'ZAWA-023 internal private key blob (medium confidence: exact known word)',
+      code: `const internal_private_key_blob = "xY1^zT4&aB3$kL9#mP2@qR5!vW8*";`,
+    },
+
+    // Decoys
+    {
+      id: 'DC-063',
+      type: 'decoy',
+      description: 'Property assignment where secret_key_base is not the last segment',
+      code: `config.secret_key_base.enabled = "true";`,
+    },
+    {
+      id: 'DC-064',
+      type: 'decoy',
+      description: 'Property assignment where secretKey is not the last segment',
+      code: `obj.secretKey.active = "false";`,
+    },
+    {
+      id: 'DC-065',
+      type: 'decoy',
+      description: 'Property assignment with unquoted code variable reference',
+      code: `obj.secretKey = externalSecretValue;`,
+    },
+    {
+      id: 'DC-066',
+      type: 'decoy',
+      description: 'session_secret with placeholder value',
+      code: `const session_secret = "replace_with_your_session_secret_key";`,
+    },
+    {
+      id: 'DC-067',
+      type: 'decoy',
+      description: 'signing_key with URL value',
+      code: `const signing_key = "https://example.com/keys/signing_key.pem";`,
+    },
+    {
+      id: 'DC-068',
+      type: 'decoy',
+      description: 'Secret name with low entropy value (< 4.0)',
+      code: `const custom_secret = "abcabcabcabcabcabcabcabc";`,
+    },
+    {
+      id: 'DC-069',
+      type: 'decoy',
+      description: 'Secret name with short value (< 24 chars)',
+      code: `const custom_token = "short_tok_123";`,
+    },
+    {
+      id: 'DC-070',
+      type: 'decoy',
+      description: 'Secret name with standard UUID value',
+      code: `const client_secret_uuid = "123e4567-e89b-12d3-a456-426614174000";`,
+    },
+    {
+      id: 'DC-071',
+      type: 'decoy',
+      description: 'Password name with SHA-256 pure hex hash value',
+      code: `const password_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";`,
+    },
+    {
+      id: 'DC-072',
+      type: 'decoy',
+      description: 'Token name with Ethereum hex address value',
+      code: `const wallet_token = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed";`,
+    },
+    {
+      id: 'DC-073',
+      type: 'decoy',
+      description: 'Secret name with URL value',
+      code: `const secret_endpoint_url = "https://api.example.com/v1/auth/token?signature=xyz1234567890";`,
+    },
+    {
+      id: 'DC-074',
+      type: 'decoy',
+      description: 'Private key name with file system path',
+      code: `const private_key_path = "/etc/ssl/certs/internal/private_key.pem";`,
+    },
+    {
+      id: 'DC-075',
+      type: 'decoy',
+      description: 'Secret name with relative path and file extension',
+      code: `const secret_config_file = "config/certs/production.crt";`,
+    },
+    {
+      id: 'DC-076',
+      type: 'decoy',
+      description: 'Secret name with process.env code reference',
+      code: `const secret_value = "process.env.MY_SECRET_TOKEN_VALUE_HERE";`,
+    },
+    {
+      id: 'DC-077',
+      type: 'decoy',
+      description: 'High-entropy secret suppressed with inline zawa-ignore comment',
+      code: `const webhook_secret = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#"; // ${F.ignore}`,
+    },
+  ]);
+
   // File 12: Unignored .env check (ZAWA-021)
   // Plant an actual .env file that is NOT covered by any .gitignore in planted/
   const unignoredEnvPath = path.join(PLANTED_DIR, '.env');

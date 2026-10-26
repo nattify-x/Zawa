@@ -872,6 +872,222 @@
     "description": "Decoy comparison inside .rst documentation file"
   },
   {
+    "id": "TS-051",
+    "file": "round5-secrets.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Rails secret_key_base property assignment"
+  },
+  {
+    "id": "TS-052",
+    "file": "round5-secrets.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Nested property assignment with secret_key_base"
+  },
+  {
+    "id": "TS-053",
+    "file": "round5-secrets.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Object property assignment with secretKey"
+  },
+  {
+    "id": "TS-054",
+    "file": "round5-secrets.ts",
+    "line": 10,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Generic name session_secret"
+  },
+  {
+    "id": "TS-055",
+    "file": "round5-secrets.ts",
+    "line": 12,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Generic name cookie_secret"
+  },
+  {
+    "id": "TS-056",
+    "file": "round5-secrets.ts",
+    "line": 14,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Generic name app_secret"
+  },
+  {
+    "id": "TS-057",
+    "file": "round5-secrets.ts",
+    "line": 16,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Generic name signing_key"
+  },
+  {
+    "id": "TS-058",
+    "file": "round5-secrets.ts",
+    "line": 18,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Generic name encryption_key"
+  },
+  {
+    "id": "TS-059",
+    "file": "round5-secrets.ts",
+    "line": 20,
+    "type": "secret",
+    "expectedRule": "ZAWA-023",
+    "description": "ZAWA-023 custom webhook secret (medium confidence: exact known word)"
+  },
+  {
+    "id": "TS-060",
+    "file": "round5-secrets.ts",
+    "line": 22,
+    "type": "secret",
+    "expectedRule": "ZAWA-023",
+    "description": "ZAWA-023 name containing credential substring (low confidence: not exact known word)"
+  },
+  {
+    "id": "TS-061",
+    "file": "round5-secrets.ts",
+    "line": 24,
+    "type": "secret",
+    "expectedRule": "ZAWA-023",
+    "description": "ZAWA-023 user access token data (medium confidence: exact known word)"
+  },
+  {
+    "id": "TS-062",
+    "file": "round5-secrets.ts",
+    "line": 26,
+    "type": "secret",
+    "expectedRule": "ZAWA-023",
+    "description": "ZAWA-023 internal private key blob (medium confidence: exact known word)"
+  },
+  {
+    "id": "DC-063",
+    "file": "round5-secrets.ts",
+    "line": 28,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Property assignment where secret_key_base is not the last segment"
+  },
+  {
+    "id": "DC-064",
+    "file": "round5-secrets.ts",
+    "line": 30,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Property assignment where secretKey is not the last segment"
+  },
+  {
+    "id": "DC-065",
+    "file": "round5-secrets.ts",
+    "line": 32,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Property assignment with unquoted code variable reference"
+  },
+  {
+    "id": "DC-066",
+    "file": "round5-secrets.ts",
+    "line": 34,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "session_secret with placeholder value"
+  },
+  {
+    "id": "DC-067",
+    "file": "round5-secrets.ts",
+    "line": 36,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "signing_key with URL value"
+  },
+  {
+    "id": "DC-068",
+    "file": "round5-secrets.ts",
+    "line": 38,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Secret name with low entropy value (< 4.0)"
+  },
+  {
+    "id": "DC-069",
+    "file": "round5-secrets.ts",
+    "line": 40,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Secret name with short value (< 24 chars)"
+  },
+  {
+    "id": "DC-070",
+    "file": "round5-secrets.ts",
+    "line": 42,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Secret name with standard UUID value"
+  },
+  {
+    "id": "DC-071",
+    "file": "round5-secrets.ts",
+    "line": 44,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Password name with SHA-256 pure hex hash value"
+  },
+  {
+    "id": "DC-072",
+    "file": "round5-secrets.ts",
+    "line": 46,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Token name with Ethereum hex address value"
+  },
+  {
+    "id": "DC-073",
+    "file": "round5-secrets.ts",
+    "line": 48,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Secret name with URL value"
+  },
+  {
+    "id": "DC-074",
+    "file": "round5-secrets.ts",
+    "line": 50,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Private key name with file system path"
+  },
+  {
+    "id": "DC-075",
+    "file": "round5-secrets.ts",
+    "line": 52,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Secret name with relative path and file extension"
+  },
+  {
+    "id": "DC-076",
+    "file": "round5-secrets.ts",
+    "line": 54,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Secret name with process.env code reference"
+  },
+  {
+    "id": "DC-077",
+    "file": "round5-secrets.ts",
+    "line": 56,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "High-entropy secret suppressed with inline zawa-ignore comment"
+  },
+  {
     "id": "TS-038",
     "file": ".env",
     "line": 1,

@@ -81,6 +81,67 @@ export function isHexAddressOrHashOrUuid(val: string): boolean {
 }
 
 /**
+ * Checks whether a string value is an absolute or relative URL.
+ */
+export function isUrl(val: string): boolean {
+  if (!val || val.length === 0) {
+    return false;
+  }
+  const trimmed = val.trim().replace(/^["'`]/, '').replace(/["'`]$/, '').trim();
+  return /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed) || trimmed.includes('://');
+}
+
+/**
+ * Checks whether a string value is a file system path or file reference.
+ */
+export function isPath(val: string): boolean {
+  if (!val || val.length === 0) {
+    return false;
+  }
+  const trimmed = val.trim().replace(/^["'`]/, '').replace(/["'`]$/, '').trim();
+
+  // 1. Path prefixes: /, \, ./, ../, ~/, or Windows drive letter (e.g. C:\)
+  if (/^(?:\/|\\|\.\/|\.\.\/|~\/|[a-zA-Z]:[/\\])/.test(trimmed)) {
+    return true;
+  }
+
+  // 2. Trailing slash / or \
+  if (/[/\\]$/.test(trimmed)) {
+    return true;
+  }
+
+  // 3. Contains / or \ with a file extension
+  if (/[/\\]/.test(trimmed) && /\.[a-zA-Z0-9]{1,8}$/.test(trimmed)) {
+    return true;
+  }
+
+  // 4. Dot-segmented string ending with common file extensions (.xml, .json, .yaml, .html, .css, etc.)
+  if (/\.(?:xml|json|ya?ml|html?|txt|md|csv|tsv|css|js|ts|jsx|tsx|py|rb|java|class|jar|php|sh|bat|cmd|conf|cfg|ini|properties)$/i.test(trimmed)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks whether an identifier contains an exact known secret word
+ * (secret, token, passwd, password, credential, apikey, private).
+ */
+export function hasExactKnownWord(name: string): boolean {
+  if (!name) {
+    return false;
+  }
+  // Extract last segment if name is a dot or colon separated path
+  const lastSegment = name.split(/[.:]/).pop() || name;
+  const words = lastSegment
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .split(/[^a-zA-Z0-9]+/)
+    .map((w) => w.toLowerCase());
+  const KNOWN_WORDS = new Set(['secret', 'token', 'passwd', 'password', 'credential', 'apikey', 'private']);
+  return words.some((w) => KNOWN_WORDS.has(w));
+}
+
+/**
  * Decodes a JWT payload offline and checks if its 'exp' claim is in the past.
  */
 export function isJwtExpired(token: string): boolean {

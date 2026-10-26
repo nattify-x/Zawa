@@ -97,5 +97,6 @@ export function createUnignoredEnvFinding(relPath: string): Finding {
     line: 1,
     column: 1,
     snippet: `${relPath} is not covered by .gitignore`,
+    message: '.env file exists and is not covered by .gitignore',
   };
 }

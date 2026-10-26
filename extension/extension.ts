@@ -65,7 +65,8 @@ function toDiagnostic(finding: Finding): vscode.Diagnostic {
 
   const range = new vscode.Range(startLine, startCol, endLine, endCol);
   // Requirement: show CWE, CVSS, and confidence in the message
-  const message = `[${finding.ruleId}] ${finding.name} (${finding.cwe}, CVSS ${finding.cvss}, Confidence: ${finding.confidence}): ${finding.snippet}`;
+  const whyPart = finding.message ? ` (${finding.message})` : '';
+  const message = `[${finding.ruleId}] ${finding.name} (${finding.cwe}, CVSS ${finding.cvss}, Confidence: ${finding.confidence})${whyPart}: ${finding.snippet}`;
 
   let severity = vscode.DiagnosticSeverity.Information;
   if (finding.severity === 'error') {
