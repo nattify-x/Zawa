@@ -1061,7 +1061,114 @@ function generateBenchmark() {
       description: 'High-entropy secret suppressed with inline zawa-ignore comment',
       code: `const webhook_secret = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#"; // ${F.ignore}`,
     },
+    // Round 5A-fix: Placeholders (notsupplied, not_supplied, "not supplied", none, null, undefined, empty, n/a, tbd, _here, -here)
+    {
+      id: 'DC-078',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "notsupplied"',
+      code: `const api_key = "notsupplied";`,
+    },
+    {
+      id: 'DC-079',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "not_supplied"',
+      code: `const secret_key = "not_supplied";`,
+    },
+    {
+      id: 'DC-080',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "not supplied"',
+      code: `const auth_token = "not supplied";`,
+    },
+    {
+      id: 'DC-081',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "none"',
+      code: `const session_secret = "none";`,
+    },
+    {
+      id: 'DC-082',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "null"',
+      code: `const cookie_secret = "null";`,
+    },
+    {
+      id: 'DC-083',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "undefined"',
+      code: `const app_secret = "undefined";`,
+    },
+    {
+      id: 'DC-084',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "empty"',
+      code: `const signing_key = "empty";`,
+    },
+    {
+      id: 'DC-085',
+      type: 'decoy',
+      description: 'Generic secret with placeholder "n/a"',
+      code: `const encryption_key = "n/a";`,
+    },
+    {
+      id: 'DC-086',
+      type: 'decoy',
+      description: 'Generic password with placeholder "tbd"',
+      code: `const user_password = "tbd";`,
+    },
+    {
+      id: 'DC-087',
+      type: 'decoy',
+      description: 'Generic secret with value ending in "_here"',
+      code: `const cookieSecret = "session_cookie_secret_key_here";`,
+    },
+    {
+      id: 'DC-088',
+      type: 'decoy',
+      description: 'High-entropy secret with value ending in "-here"',
+      code: `const custom_token = "insert_your_private_token-here";`,
+    },
   ]);
+
+  // File 16: Minified JavaScript file (*.min.js) skipped for generic rules
+  const minJsPath = path.join(PLANTED_DIR, 'app.min.js');
+  fs.writeFileSync(minJsPath, 'const password="SuperSecretPassword123!";const customSecret="mP2@qR5!vW8*xY1^zT4&aB3$kL9#";\n', 'utf-8');
+  groundTruth.push({
+    id: 'DC-089',
+    file: 'app.min.js',
+    line: 1,
+    type: 'decoy',
+    expectedRule: null,
+    description: 'Generic rules skip *.min.js files',
+  });
+
+  // File 17: Vendor/Third-party files skipped for generic rules
+  const thirdPartyDir = path.join(PLANTED_DIR, 'third_party');
+  fs.mkdirSync(thirdPartyDir, { recursive: true });
+  const thirdPartyPath = path.join(thirdPartyDir, 'library.js');
+  fs.writeFileSync(thirdPartyPath, 'const secretKey = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#";\n', 'utf-8');
+  groundTruth.push({
+    id: 'DC-090',
+    file: 'third_party/library.js',
+    line: 1,
+    type: 'decoy',
+    expectedRule: null,
+    description: 'Generic rules skip files in third_party/ directory',
+  });
+
+  // File 18: Assets javascripts file skipped for generic rules
+  const assetsJsDir = path.join(PLANTED_DIR, 'assets', 'javascripts');
+  fs.mkdirSync(assetsJsDir, { recursive: true });
+  const assetsJsPath = path.join(assetsJsDir, 'jsapi.js');
+  fs.writeFileSync(assetsJsPath, 'google.loader.ApiKey = "mP2@qR5!vW8*xY1^zT4&aB3$kL9#";\n', 'utf-8');
+  groundTruth.push({
+    id: 'DC-091',
+    file: 'assets/javascripts/jsapi.js',
+    line: 1,
+    type: 'decoy',
+    expectedRule: null,
+    description: 'Generic rules skip files in assets/javascripts/ directory',
+  });
 
   // File 12: Unignored .env check (ZAWA-021)
   // Plant an actual .env file that is NOT covered by any .gitignore in planted/

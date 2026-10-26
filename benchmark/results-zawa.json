@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-10-26T11:41:40.637Z",
-  "engineDurationMs": 72,
-  "totalGroundTruth": 139,
+  "timestamp": "2026-10-26T12:05:12.412Z",
+  "engineDurationMs": 110,
+  "totalGroundTruth": 153,
   "metrics": {
     "truePositives": 62,
     "falsePositives": 0,
     "falseNegatives": 0,
-    "trueNegatives": 77,
+    "trueNegatives": 91,
     "precision": 1,
     "recall": 1,
     "f1Score": 1,
@@ -16,7 +16,7 @@
     "matchedSecretsCount": 62,
     "missedSecretsCount": 0,
     "falsePositivesCount": 0,
-    "ignoredDecoysCount": 77,
+    "ignoredDecoysCount": 91,
     "missedSecrets": [],
     "falsePositives": []
   }

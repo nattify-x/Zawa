@@ -4,7 +4,7 @@
  * All regex patterns MUST include the global ('g') flag and strictly bounded quantifiers.
  */
 
-import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid, isGenericRuleIgnored, isUrl, isPath, calculateShannonEntropy } from './entropy';
+import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid, isGenericRuleIgnored, isUrl, isPath, calculateShannonEntropy, isVendorOrMinifiedPath } from './entropy';
 import { Rule } from './types';
 
 export function maskSecret(secret: string): string {
@@ -91,7 +91,11 @@ export const DEFAULT_RULES: Rule[] = [
     cvss: 7.5,
     pattern: /(?:password|passwd|pwd|pass)\s*[:=]\s*["']([^"'\r\n\s]{6,128})["']/gi,
     description: 'Hardcoded password literal discovered in source code or configuration.',
-    filter: (match) => {
+    filter: (match, filename) => {
+      // Skip vendor and minified files for generic rules
+      if (isVendorOrMinifiedPath(filename)) {
+        return false;
+      }
       const value = match[1] || '';
       if (isGenericRuleIgnored(match, value)) {
         return false;
@@ -114,7 +118,11 @@ export const DEFAULT_RULES: Rule[] = [
     cvss: 7.5,
     pattern: /(?:(?:["']?(?:[a-zA-Z0-9_$.:-]+(?:\.|::))[a-zA-Z0-9_]*(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret|secret_key_base|SECRET_KEY_BASE|secretKeyBase|session_secret|SESSION_SECRET|sessionSecret|cookie_secret|COOKIE_SECRET|cookieSecret|app_secret|APP_SECRET|appSecret|signing_key|SIGNING_KEY|signingKey|encryption_key|ENCRYPTION_KEY|encryptionKey)[a-zA-Z0-9_]*["']?\s*[:=]\s*["']([^"'\r\n\s]{8,256})["'])|(?:["']?\b[a-zA-Z0-9_]*(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret|secret_key_base|SECRET_KEY_BASE|secretKeyBase|session_secret|SESSION_SECRET|sessionSecret|cookie_secret|COOKIE_SECRET|cookieSecret|app_secret|APP_SECRET|appSecret|signing_key|SIGNING_KEY|signingKey|encryption_key|ENCRYPTION_KEY|encryptionKey)[a-zA-Z0-9_]*\b["']?\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?))/gi,
     description: 'High-entropy secret or API key assignment in an environment file, configuration, or code.',
-    filter: (match) => {
+    filter: (match, filename) => {
+      // Skip vendor and minified files for generic rules
+      if (isVendorOrMinifiedPath(filename)) {
+        return false;
+      }
       const value = match[1] || match[2] || '';
 
       // 1. Secrets must consist of printable ASCII characters
@@ -463,7 +471,11 @@ export const DEFAULT_RULES: Rule[] = [
     cvss: 7.5,
     pattern: /(?:["']?(?:[a-zA-Z0-9_$.:-]+(?:\.|::))?[a-zA-Z0-9_.-]*(?:secret|token|passwd|password|credential|apikey|private)[a-zA-Z0-9_.-]*["']?)\s*(?:=|:=|:|=>)\s*["']([^"'\r\n\s]{24,1024})["']/gi,
     description: 'High-entropy value in an assignment or key-value pair with a secret-like identifier.',
-    filter: (match) => {
+    filter: (match, filename) => {
+      // Skip vendor and minified files for generic rules
+      if (isVendorOrMinifiedPath(filename)) {
+        return false;
+      }
       const value = match[1] || '';
 
       // 1. Must consist of printable ASCII characters

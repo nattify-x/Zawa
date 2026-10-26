@@ -186,13 +186,14 @@ export function isPlaceholder(val: string): boolean {
   }
 
   const trimmed = val.trim();
-  const lower = trimmed.toLowerCase();
+  const clean = trimmed.replace(/^["'`]/, '').replace(/["'`]$/, '').trim();
+  const lower = clean.toLowerCase();
 
   // 1. All same character check (e.g. 'aaaaaa', '111111', '******')
-  const firstChar = trimmed[0];
+  const firstChar = clean[0];
   let allSame = true;
-  for (let i = 1; i < trimmed.length; i++) {
-    if (trimmed[i] !== firstChar) {
+  for (let i = 1; i < clean.length; i++) {
+    if (clean[i] !== firstChar) {
       allSame = false;
       break;
     }
@@ -202,11 +203,33 @@ export function isPlaceholder(val: string): boolean {
   }
 
   // 2. Contains '<' or '>' (explicit angle bracket placeholder check)
-  if (trimmed.includes('<') || trimmed.includes('>')) {
+  if (clean.includes('<') || clean.includes('>')) {
     return true;
   }
 
-  // 3. Specific placeholder substrings
+  // 3. Values ending in _here or -here (case-insensitive)
+  if (lower.endsWith('_here') || lower.endsWith('-here')) {
+    return true;
+  }
+
+  // 4. Exact placeholder values (notsupplied, not_supplied, "not supplied", none, null, undefined, empty, n/a, tbd)
+  const EXACT_PLACEHOLDERS = new Set([
+    'notsupplied',
+    'not_supplied',
+    'not supplied',
+    'none',
+    'null',
+    'undefined',
+    'empty',
+    'n/a',
+    'na',
+    'tbd',
+  ]);
+  if (EXACT_PLACEHOLDERS.has(lower)) {
+    return true;
+  }
+
+  // 5. Specific placeholder substrings
   const placeholderTokens = [
     'change',
     'replace',
@@ -219,6 +242,9 @@ export function isPlaceholder(val: string): boolean {
     'test',
     'dummy',
     'sample',
+    'notsupplied',
+    'not_supplied',
+    'not supplied',
   ];
   for (const token of placeholderTokens) {
     if (lower.includes(token)) {
@@ -226,8 +252,31 @@ export function isPlaceholder(val: string): boolean {
     }
   }
 
-  // 4. Template indicators: ${...}, %...%
-  if (/\$\{[^}]+\}/.test(trimmed) || /^%[^%]+%$/.test(trimmed)) {
+  // 6. Template indicators: ${...}, %...%
+  if (/\$\{[^}]+\}/.test(clean) || /^%[^%]+%$/.test(clean)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks whether a file path belongs to a vendor directory, third-party directory,
+ * assets/javascripts directory, or minified JavaScript file (*.min.js).
+ */
+export function isVendorOrMinifiedPath(filePath?: string): boolean {
+  if (!filePath) {
+    return false;
+  }
+  const norm = filePath.replace(/\\/g, '/').toLowerCase();
+
+  // 1. *.min.js files
+  if (norm.endsWith('.min.js') || /\.min\.js$/i.test(norm)) {
+    return true;
+  }
+
+  // 2. Paths containing /vendor/, /third_party/, /node_modules/, or /assets/javascripts/
+  if (/(?:^|\/)(?:vendor|third_party|node_modules|assets\/javascripts)(?:\/|$)/i.test(norm)) {
     return true;
   }
 

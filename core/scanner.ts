@@ -3,7 +3,7 @@
  * Pure TypeScript scanning logic without VS Code imports.
  */
 
-import { isDocumentedExampleKey, isJwtExpired, calculateShannonEntropy, hasExactKnownWord } from './entropy';
+import { isDocumentedExampleKey, isJwtExpired, calculateShannonEntropy, hasExactKnownWord, isVendorOrMinifiedPath } from './entropy';
 import { DEFAULT_RULES } from './rules';
 import { Confidence, Finding, Rule } from './types';
 
@@ -415,6 +415,14 @@ export function scanText(
     // Stop early if file finding limit is already reached
     if (findings.length >= maxFindings) {
       break;
+    }
+
+    // Skip vendor and minified files for generic rules (ZAWA-004, ZAWA-005, ZAWA-023)
+    if (
+      (rule.id === 'ZAWA-004' || rule.id === 'ZAWA-005' || rule.id === 'ZAWA-023') &&
+      isVendorOrMinifiedPath(filename)
+    ) {
+      continue;
     }
 
     // Ensure global flag 'g'
