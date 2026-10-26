@@ -4,6 +4,7 @@
   "description": "Offline security scanner that guards your code before it leaves your machine.",
   "version": "0.1.2",
   "publisher": "nattify-x",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/nattify-x/Zawa"

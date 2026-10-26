@@ -4,9 +4,22 @@ Zawa is a fast, offline security scanner for VS Code and terminal environments t
 
 ---
 
+## Install
+
+Download `zawa-0.1.2.vsix` from the GitHub release and run:
+
+```bash
+code --install-extension zawa-0.1.2.vsix
+```
+
+---
+
 ## Features
 
 - **100% Offline & Private:** Zero network requests, zero telemetry, and zero runtime dependencies.
+- **Quick fixes in VS Code (Move secret to .env, Ignore this finding):** One-click lightbulb actions to automatically extract secrets into `.env` (updating `.gitignore` and refactoring JS/TS/Python/Ruby code) or suppress findings with language-aware inline `zawa-ignore` comments.
+- **A reason in every finding message:** Every finding includes an explanatory rationale (e.g. matched pattern, Shannon entropy, character length, or expired token status).
+- **Offline checks: expired JWTs and documented example keys are lowered in confidence:** Decodes JWT timestamps offline to downgrade expired tokens and flags published example keys without false alarms.
 - **Git Pre-Commit Hook:** Installable with `zawa install-hook` to block commits containing high-confidence secrets before they are committed.
 - **AI Service Key Protection:** Comprehensive detection of keys from OpenAI, Anthropic, Hugging Face, Groq, Replicate, Mistral, and Cohere.
 - **Unignored `.env` Guard:** Automatically flags exposed `.env` files not covered by `.gitignore` (CWE-538).
@@ -17,7 +30,7 @@ Zawa is a fast, offline security scanner for VS Code and terminal environments t
 - **Standalone CLI:** Includes a fast, offline CLI with optional JSON output (`--json`) for local pre-commit hooks and CI pipelines.
 - **Resource Efficient:** Lightweight and designed for low memory use, running efficiently across any development machine without background overhead.
 
-## Included Detection Rules
+## Included Detection Rules (23 Rules)
 
 | Rule ID | Finding | Severity | Confidence | CWE | CVSS |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -42,6 +55,8 @@ Zawa is a fast, offline security scanner for VS Code and terminal environments t
 | `ZAWA-019` | Mistral AI API Key (`mis_...` / assignment) | Error | High | CWE-798 | 8.0 |
 | `ZAWA-020` | Cohere API Key (`coh_...` / assignment) | Error | High | CWE-798 | 8.0 |
 | `ZAWA-021` | .env Not Ignored | Error | High | CWE-538 | 7.5 |
+| `ZAWA-022` | Hardcoded credential in a comparison | Warning | Medium | CWE-798 | 7.5 |
+| `ZAWA-023` | High-entropy value in a secret-like name | Warning | Medium/Low | CWE-798 | 7.5 |
 
 ## Git Pre-Commit Hook (Stop Leaks Before Commit)
 
@@ -78,10 +93,10 @@ npm run scan -- <folder> --json
 
 ## Regression test (self-made, not an independent evaluation)
 
-Zawa includes a reproducible synthetic test suite measuring precision, recall, F1 score, and scan latency across 77 ground-truth test cases (38 true secrets and 39 decoys):
+Zawa includes a reproducible synthetic test suite measuring precision, recall, F1 score, and scan latency across 153 ground-truth test cases (62 true secrets and 91 decoys):
 
-- **38 True Secrets**: Covers cloud providers (AWS, Google), platforms (GitHub, Stripe, Slack, databases), and AI service providers (OpenAI, Anthropic, Hugging Face, Groq, Replicate, Mistral, Cohere), plus unignored `.env` file detection. Built dynamically at runtime from string fragments to prevent triggering external push protection filters.
-- **39 Decoys**: Evaluates resilience against placeholders (`changeme`, `your_...`, `${VAR}`), repeated characters (`xxxxxx`), low-entropy strings, code references (`process.env`), lookalikes with invalid prefixes/lengths, `.env.example` templates, locally ignored `.env` files, and `zawa-ignore` comments.
+- **62 True Secrets**: Covers cloud providers (AWS, Google), platforms (GitHub, Stripe, Slack, databases), and AI service providers (OpenAI, Anthropic, Hugging Face, Groq, Replicate, Mistral, Cohere), credentials in comparisons, generic secret assignments, plus unignored `.env` file detection. Built dynamically at runtime from string fragments to prevent triggering external push protection filters.
+- **91 Decoys**: Evaluates resilience against placeholders (`changeme`, `your_...`, `${VAR}`, `notsupplied`, `none`, `_here`), repeated characters (`xxxxxx`), low-entropy strings, code references (`process.env`), lookalikes with invalid prefixes/lengths, `.env.example` templates, vendor/minified files, locally ignored `.env` files, and `zawa-ignore` comments.
 
 ```bash
 npm run bench:generate  # Generate synthetic dataset in benchmark/planted/
@@ -90,40 +105,50 @@ npm run bench:eval      # Evaluate accuracy against benchmark/ground-truth.json
 
 | Metric | Score | Details |
 | :--- | :--- | :--- |
-| **True Positives (TP)** | **38 / 38** | 100% of format-valid secrets detected |
+| **True Positives (TP)** | **62 / 62** | 100% of format-valid secrets detected |
 | **False Positives (FP)** | **0** | Zero decoys or placeholders falsely flagged |
 | **False Negatives (FN)** | **0** | Zero secrets missed |
-| **True Negatives (TN)** | **39 / 39** | 100% of decoys correctly ignored |
+| **True Negatives (TN)** | **91 / 91** | 100% of decoys correctly ignored |
 | **Precision** | **100.00 %** | $TP / (TP + FP)$ |
 | **Recall** | **100.00 %** | $TP / (TP + FN)$ |
 | **F1-Score** | **100.00 %** | Harmonic mean of precision and recall |
 | **Accuracy** | **100.00 %** | $(TP + TN) / (TP + TN + FP + FN)$ |
-| **Scan Duration** | **~50 ms** | Sub-60ms offline evaluation |
+| **Scan Duration** | **~100 ms** | Fast offline evaluation |
 
 Results are recorded in `benchmark/results-zawa.json`.
 
 ## Real-world evaluation
 
-Tested against open-source intentionally vulnerable applications:
+Tested against open-source intentionally vulnerable applications (Zawa uses `--exclude-tests`, Gitleaks default):
 
-| Target | Zawa Findings | Gitleaks Findings | Notes |
+| Target | Zawa Findings | Gitleaks Findings | Status |
 | :--- | :--- | :--- | :--- |
-| **OWASP Juice Shop** | **127** (before tuning)<br>**15** (with `--exclude-tests`) | 69 | 110 of the original 127 findings were in test files. The 15 retained findings comprise 3 private keys and 12 seed database passwords. |
-| **OWASP NodeGoat** | **1** (before round 2)<br>**3** (after round 2) | 3 | Before round 2 Zawa found 1 (a private key) vs Gitleaks 3; after round 2 Zawa finds 3 (including the camelCase `zapApiKey` in `config/env/development.js` and `test.js`) vs Gitleaks 3. |
+| **OWASP Juice Shop** | 20 | 69 | tuned |
+| **OWASP NodeGoat** | 2 | 3 | tuned |
+| **OWASP WebGoat** | 18 | 24 | tuned |
+| **DVWA** | 3 | 1 | tuned |
+| **railsgoat** | 7 | 1 | unseen, then tuned |
+| **dvna** | 2 | 0 | unseen |
+| **OWASP WrongSecrets** | 10 | 56 | unseen, final |
+| **Express** | 0 | 0 | clean, unseen |
 
-*Note: NodeGoat was used to tune round 2, so it is no longer an unseen test set.*
+On WrongSecrets, Zawa misses many infrastructure secrets (Kubernetes Secret manifests, Vault tokens, Slack webhook URLs, base64-encoded private keys); roughly half of Gitleaks' extra findings there are false alarms such as Docker image names. Timings varied too much between runs to claim either tool is faster.
 
 ## Limitations
 
 - **Regex-based without data-flow analysis:** Matches patterns and assignments statically; does not trace variable propagation, taint, or cross-file imports.
 - **Identifier naming:** only a fixed list of names (ApiKey, apiSecret, secretKey, authToken, accessToken, clientSecret and common uppercase names) is recognized; other custom names are missed.
+- **Infrastructure files:** Misses secrets in Kubernetes Secret manifests, Vault tokens, Slack webhook URLs, base64-encoded private keys, and Dockerfile ARG/ENV instructions.
+- **No Git history scanning:** Scans only the current working tree and staged files, not past git commit history or git reflog.
+- **Quick fix language support:** Automated code replacement to environment variables currently supports JavaScript/TypeScript, Python, and Ruby only; other languages display the required `.env` line without editing source files.
 - **Hard file & line bounds:** Skips individual lines over 2,000 characters (minified code) and skips files larger than 1 MB to prevent memory exhaustion and ReDoS.
 - **Estimated severity:** CVSS scores are static estimates based on standard vulnerability impacts, not runtime exploitability assessments.
-- **Local-only pre-commit hook:** The pre-commit hook lives in `.git/hooks/pre-commit` (which is gitignored by design and not shared when cloning) and can always be bypassed using `git commit --no-verify`.
+- The hook lives in .git/hooks, which is not copied when the repository is cloned, and it can be bypassed with git commit --no-verify.
 - Test and documentation files are demoted, not removed; placeholder detection is word-based and can miss unusual placeholders.
 
 ## Vision and roadmap
 
+- **Infrastructure & History Coverage:** Close the infrastructure gaps (Kubernetes Secret manifests, Vault and Slack webhook formats, base64-encoded keys, Dockerfile ARG/ENV) and Git history scanning.
 - **Phase 2 (Private Repo Scanning):** GitHub token scanning of private repositories integrated with VS Code `SecretStorage` for secure offline credential caching.
 - **Phase 3 (Curated Labeled Dataset):** Expanded labeled benchmark dataset combining synthetic edge cases with verified real-world manual labels.
 - **Phase 4 (Local AI Triage):** Fine-tune a small local code model via LoRA as an optional, fully offline secondary classifier to triage ambiguities and minimize false positives without network calls.

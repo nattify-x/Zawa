@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-10-26T12:05:12.412Z",
-  "engineDurationMs": 110,
+  "timestamp": "2026-10-26T21:05:15.796Z",
+  "engineDurationMs": 897,
   "totalGroundTruth": 153,
   "metrics": {
     "truePositives": 62,

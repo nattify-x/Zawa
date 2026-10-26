@@ -22,7 +22,7 @@ const BINARY_EXTENSIONS = new Set([
 const WORKSPACE_EXCLUDE_GLOB = '{**/node_modules/**,**/.git/**,**/out/**,**/dist/**,**/build/**,**/.next/**,**/vendor/**,**/coverage/**,**/*.lock,**/*lock.json,**/*lock.yaml,**/*lock.yml}';
 
 /**
- * Hardening limits to protect machines with low memory (e.g. 6 GB RAM).
+ * Hardening limits to keep scans light on memory.
  */
 const MAX_SCAN_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB limit per file
 const SCAN_BATCH_SIZE = 20;                      // 20 files per batch
