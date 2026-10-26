@@ -1,22 +1,22 @@
 {
-  "timestamp": "2026-10-26T06:11:46.995Z",
-  "engineDurationMs": 69,
-  "totalGroundTruth": 96,
+  "timestamp": "2026-10-26T11:07:50.700Z",
+  "engineDurationMs": 83,
+  "totalGroundTruth": 112,
   "metrics": {
-    "truePositives": 46,
+    "truePositives": 50,
     "falsePositives": 0,
     "falseNegatives": 0,
-    "trueNegatives": 50,
+    "trueNegatives": 62,
     "precision": 1,
     "recall": 1,
     "f1Score": 1,
     "accuracy": 1
   },
   "details": {
-    "matchedSecretsCount": 46,
+    "matchedSecretsCount": 50,
     "missedSecretsCount": 0,
     "falsePositivesCount": 0,
-    "ignoredDecoysCount": 50,
+    "ignoredDecoysCount": 62,
     "missedSecrets": [],
     "falsePositives": []
   }

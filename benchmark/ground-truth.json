@@ -368,6 +368,14 @@
     "description": "Full Private Key suppressed with inline zawa-ignore comment"
   },
   {
+    "id": "DC-051",
+    "file": "crypto-keys.ts",
+    "line": 20,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Private Key header and footer with program code between them (no finding)"
+  },
+  {
     "id": "TS-022",
     "file": "database-config.ts",
     "line": 4,
@@ -512,9 +520,33 @@
     "description": "totp_secret snake_case assignment with high Shannon entropy"
   },
   {
-    "id": "DC-028",
+    "id": "TS-047",
     "file": "environment.env",
     "line": 16,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Env-style key with prefix LEAKED_API_KEY"
+  },
+  {
+    "id": "TS-048",
+    "file": "environment.env",
+    "line": 18,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Env-style key with prefix STRIPE_API_KEY"
+  },
+  {
+    "id": "TS-049",
+    "file": "environment.env",
+    "line": 20,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Env-style key with prefix MY_SECRET_KEY"
+  },
+  {
+    "id": "DC-028",
+    "file": "environment.env",
+    "line": 22,
     "type": "decoy",
     "expectedRule": null,
     "description": "Placeholder API key \"your_api_key_here\""
@@ -522,7 +554,7 @@
   {
     "id": "DC-029",
     "file": "environment.env",
-    "line": 18,
+    "line": 24,
     "type": "decoy",
     "expectedRule": null,
     "description": "Placeholder secret with template syntax ${...}"
@@ -530,7 +562,7 @@
   {
     "id": "DC-030",
     "file": "environment.env",
-    "line": 21,
+    "line": 27,
     "type": "decoy",
     "expectedRule": null,
     "description": "High-entropy secret suppressed with preceding zawa-ignore"
@@ -538,7 +570,7 @@
   {
     "id": "DC-042",
     "file": "environment.env",
-    "line": 23,
+    "line": 29,
     "type": "decoy",
     "expectedRule": null,
     "description": "totpSecret assigned Ethereum hex address (0x + 40 hex)"
@@ -546,7 +578,7 @@
   {
     "id": "DC-043",
     "file": "environment.env",
-    "line": 25,
+    "line": 31,
     "type": "decoy",
     "expectedRule": null,
     "description": "otpSecret assigned UUID (8-4-4-4-12 hex)"
@@ -554,7 +586,7 @@
   {
     "id": "DC-044",
     "file": "environment.env",
-    "line": 27,
+    "line": 33,
     "type": "decoy",
     "expectedRule": null,
     "description": "totp_secret assigned pure SHA-256 hex hash (64 hex)"
@@ -562,10 +594,42 @@
   {
     "id": "DC-045",
     "file": "environment.env",
-    "line": 29,
+    "line": 35,
     "type": "decoy",
     "expectedRule": null,
     "description": "totpSecret assigned placeholder string"
+  },
+  {
+    "id": "DC-052",
+    "file": "environment.env",
+    "line": 37,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Key assignment built with string concatenation and function call"
+  },
+  {
+    "id": "DC-053",
+    "file": "environment.env",
+    "line": 39,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Key pattern containing regex metacharacters [ ] { }"
+  },
+  {
+    "id": "DC-054",
+    "file": "environment.env",
+    "line": 41,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Key assignment on a line commented-out with //"
+  },
+  {
+    "id": "DC-055",
+    "file": "environment.env",
+    "line": 43,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Key assignment on a line commented-out with #"
   },
   {
     "id": "TS-031",
@@ -742,6 +806,70 @@
     "type": "decoy",
     "expectedRule": null,
     "description": "Credential comparison suppressed with inline zawa-ignore comment"
+  },
+  {
+    "id": "DC-056",
+    "file": "credential-comparisons.ts",
+    "line": 20,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Comparison where left side starts with typeof operator"
+  },
+  {
+    "id": "DC-057",
+    "file": "credential-comparisons.ts",
+    "line": 22,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Comparison where right-hand literal is type name \"object\""
+  },
+  {
+    "id": "DC-058",
+    "file": "credential-comparisons.ts",
+    "line": 24,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Comparison where right-hand literal is type name \"undefined\""
+  },
+  {
+    "id": "DC-059",
+    "file": "credential-comparisons.ts",
+    "line": 26,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Comparison where literal is shorter than 4 characters"
+  },
+  {
+    "id": "DC-060",
+    "file": "credential-comparisons.ts",
+    "line": 28,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Comparison where literal is plain lowercase word \"admin\" without digits/symbols"
+  },
+  {
+    "id": "DC-061",
+    "file": "credential-comparisons.ts",
+    "line": 30,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Comparison where literal is plain lowercase word \"secret\" without digits/symbols"
+  },
+  {
+    "id": "TS-050",
+    "file": "docs/api-guide.adoc",
+    "line": 3,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": "Secret inside .adoc documentation file in docs/ directory (confidence lowered)"
+  },
+  {
+    "id": "DC-062",
+    "file": "docs/reference.rst",
+    "line": 4,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Decoy comparison inside .rst documentation file"
   },
   {
     "id": "TS-038",

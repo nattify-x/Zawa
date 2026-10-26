@@ -431,6 +431,12 @@ function generateBenchmark() {
       description: 'Full Private Key suppressed with inline zawa-ignore comment',
       code: `const SUPPRESSED_KEY = "-----BEGIN RSA PRIVATE KEY-----\\n${rsaBody}\\n-----END RSA PRIVATE KEY-----"; // ${F.ignore}`,
     },
+    {
+      id: 'DC-051',
+      type: 'decoy',
+      description: 'Private Key header and footer with program code between them (no finding)',
+      code: `const CODE_BETWEEN_KEY = "-----BEGIN PRIVATE KEY-----\\n" + "String str = keyPair.getEncoded();" + "\\n-----END PRIVATE KEY-----";`,
+    },
   ]);
 
   // File 8: Database Connection URLs
@@ -568,6 +574,27 @@ function generateBenchmark() {
       description: 'totp_secret snake_case assignment with high Shannon entropy',
       code: `totp_secret="m4K$9xP!2vL#7zQ*1wR&"`,
     },
+    {
+      id: 'TS-047',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Env-style key with prefix LEAKED_API_KEY',
+      code: `LEAKED_API_KEY="w4K$9xP!2vL#7zQ*1wR&"`,
+    },
+    {
+      id: 'TS-048',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Env-style key with prefix STRIPE_API_KEY',
+      code: `STRIPE_API_KEY="x8N#3vM$9xZ!5pL*2kQ&"`,
+    },
+    {
+      id: 'TS-049',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'Env-style key with prefix MY_SECRET_KEY',
+      code: `MY_SECRET_KEY="y9W!eR#tY$uI%oP&aS*dF"`,
+    },
     // Decoys
     {
       id: 'DC-028',
@@ -611,6 +638,30 @@ function generateBenchmark() {
       type: 'decoy',
       description: 'totpSecret assigned placeholder string',
       code: `totpSecret="your_totp_secret_key"`,
+    },
+    {
+      id: 'DC-052',
+      type: 'decoy',
+      description: 'Key assignment built with string concatenation and function call',
+      code: `const CONCAT_KEY = "API_KEY=" + generateToken();`,
+    },
+    {
+      id: 'DC-053',
+      type: 'decoy',
+      description: 'Key pattern containing regex metacharacters [ ] { }',
+      code: `const REGEX_KEY = "API_KEY=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";`,
+    },
+    {
+      id: 'DC-054',
+      type: 'decoy',
+      description: 'Key assignment on a line commented-out with //',
+      code: `// LEAKED_API_KEY="w4K$9xP!2vL#7zQ*1wR&"`,
+    },
+    {
+      id: 'DC-055',
+      type: 'decoy',
+      description: 'Key assignment on a line commented-out with #',
+      code: `# STRIPE_API_KEY="x8N#3vM$9xZ!5pL*2kQ&"`,
     },
   ]);
 
@@ -767,7 +818,69 @@ function generateBenchmark() {
       description: 'Credential comparison suppressed with inline zawa-ignore comment',
       code: `if (password === "K9$mX!8pQ#wZ4@ab") { return true; } // ${F.ignore}`,
     },
+    {
+      id: 'DC-056',
+      type: 'decoy',
+      description: 'Comparison where left side starts with typeof operator',
+      code: `if (typeof password === "string") { return false; }`,
+    },
+    {
+      id: 'DC-057',
+      type: 'decoy',
+      description: 'Comparison where right-hand literal is type name "object"',
+      code: `if (token === "object") { return false; }`,
+    },
+    {
+      id: 'DC-058',
+      type: 'decoy',
+      description: 'Comparison where right-hand literal is type name "undefined"',
+      code: `if (secret === "undefined") { return false; }`,
+    },
+    {
+      id: 'DC-059',
+      type: 'decoy',
+      description: 'Comparison where literal is shorter than 4 characters',
+      code: `if (password === "abc") { return false; }`,
+    },
+    {
+      id: 'DC-060',
+      type: 'decoy',
+      description: 'Comparison where literal is plain lowercase word "admin" without digits/symbols',
+      code: `if (token === "admin") { return false; }`,
+    },
+    {
+      id: 'DC-061',
+      type: 'decoy',
+      description: 'Comparison where literal is plain lowercase word "secret" without digits/symbols',
+      code: `if (user.password === "secret") { return false; }`,
+    },
   ]);
+
+  // File 14: Documentation file in docs/ directory (.adoc) - Item 3
+  const docsDir = path.join(PLANTED_DIR, 'docs');
+  fs.mkdirSync(docsDir, { recursive: true });
+  const docAdocPath = path.join(docsDir, 'api-guide.adoc');
+  fs.writeFileSync(docAdocPath, '= API Guide\n\napiKey="m4K$9xP!2vL#7zQ*1wR&"\n', 'utf-8');
+  groundTruth.push({
+    id: 'TS-050',
+    file: 'docs/api-guide.adoc',
+    line: 3,
+    type: 'secret',
+    expectedRule: 'ZAWA-005',
+    description: 'Secret inside .adoc documentation file in docs/ directory (confidence lowered)',
+  });
+
+  // Decoy in documentation file: plain lowercase word comparison
+  const docRstPath = path.join(docsDir, 'reference.rst');
+  fs.writeFileSync(docRstPath, 'Reference\n=========\n\nif (token === "string"): pass\n', 'utf-8');
+  groundTruth.push({
+    id: 'DC-062',
+    file: 'docs/reference.rst',
+    line: 4,
+    type: 'decoy',
+    expectedRule: null,
+    description: 'Decoy comparison inside .rst documentation file',
+  });
 
   // File 12: Unignored .env check (ZAWA-021)
   // Plant an actual .env file that is NOT covered by any .gitignore in planted/

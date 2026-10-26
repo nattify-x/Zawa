@@ -237,3 +237,55 @@ export function isValidGenericSecret(value: string, minEntropy: number = 3.0): b
 
   return entropy >= threshold;
 }
+
+/**
+ * Checks whether a generic rule match (ZAWA-004, ZAWA-005) should be ignored because:
+ * - It is a commented-out line (starts with //, #, or *)
+ * - It is built with string concatenation or a function call
+ * - It is a regular expression pattern containing [ ] { } \ ( ) metacharacters
+ */
+export function isGenericRuleIgnored(match: RegExpExecArray, value: string): boolean {
+  if (!value || value.length === 0) {
+    return true;
+  }
+
+  // 1. Regular expression metacharacters or function call in the value: [ ] { } \ ( )
+  if (/[\[\]{}\\\(\)]/.test(value)) {
+    return true;
+  }
+
+  // 2. Value contains explicit string concatenation syntax (e.g. "foo" + "bar")
+  if (/\s*\+\s*["']/.test(value) || /["']\s*\+/.test(value) || /\s*\.\s*["']/.test(value) || /["']\s*\./.test(value)) {
+    return true;
+  }
+
+  // 3. Line context inspection
+  if (match && match.input) {
+    const lineStart = match.input.lastIndexOf('\n', match.index) + 1;
+    let lineEnd = match.input.indexOf('\n', match.index);
+    if (lineEnd === -1) {
+      lineEnd = match.input.length;
+    }
+    const line = match.input.slice(lineStart, lineEnd);
+    const trimmedLine = line.trim();
+
+    // Commented-out line (starts with //, #, or *)
+    if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') || trimmedLine.startsWith('*')) {
+      return true;
+    }
+
+    // Built with string concatenation: line continues with + or . immediately after match
+    const restOfLine = match.input.slice(match.index + match[0].length, lineEnd).trim();
+    if (restOfLine.startsWith('+') || restOfLine.startsWith('.')) {
+      return true;
+    }
+
+    // Built with string concatenation: line ends with + or . immediately before match
+    const beforeMatch = match.input.slice(lineStart, match.index).trim();
+    if (beforeMatch.endsWith('+') || beforeMatch.endsWith('.')) {
+      return true;
+    }
+  }
+
+  return false;
+}

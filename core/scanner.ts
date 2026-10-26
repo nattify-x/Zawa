@@ -38,8 +38,8 @@ export function isTestOrFixturePath(filePath?: string, rootFolder?: string): boo
 }
 
 /**
- * Checks whether a given path is a documentation file (.md, .txt)
- * or an environment template (.env.example, .env.sample, .env.template).
+ * Checks whether a given path is a documentation file (.md, .txt, .adoc, .rst, .html)
+ * or path containing /docs/ or /doc/, or an environment template (.env.example, .env.sample, .env.template).
  */
 export function isDocOrTemplatePath(filePath?: string): boolean {
   if (!filePath) {
@@ -48,13 +48,26 @@ export function isDocOrTemplatePath(filePath?: string): boolean {
   const norm = filePath.replace(/\\/g, '/');
   const baseName = norm.split('/').pop() || norm;
   const lowerBase = baseName.toLowerCase();
+  const lowerNorm = norm.toLowerCase();
 
-  // 1. .md and .txt documentation files
-  if (lowerBase.endsWith('.md') || lowerBase.endsWith('.txt')) {
+  // 1. .md, .txt, .adoc, .rst, and .html documentation files
+  if (
+    lowerBase.endsWith('.md') ||
+    lowerBase.endsWith('.txt') ||
+    lowerBase.endsWith('.adoc') ||
+    lowerBase.endsWith('.rst') ||
+    lowerBase.endsWith('.html') ||
+    lowerBase.endsWith('.htm')
+  ) {
     return true;
   }
 
-  // 2. .env.example / .env.sample / .env.template files
+  // 2. Paths containing /docs/ or /doc/ (or starting with docs/ or doc/)
+  if (/(?:^|\/)(?:docs|doc)(?:\/|$)/i.test(lowerNorm)) {
+    return true;
+  }
+
+  // 3. .env.example / .env.sample / .env.template files
   if (
     lowerBase === '.env.example' ||
     lowerBase.startsWith('.env.example.') ||

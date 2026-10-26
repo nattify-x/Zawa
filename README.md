@@ -15,7 +15,7 @@ Zawa is a fast, offline security scanner for VS Code and terminal environments t
 - **Inline Suppression:** Suppress intentional test secrets or false positives by adding a `// zawa-ignore` comment on the offending line or the line directly above.
 - **Full Workspace Audits:** Run `Zawa: Scan Workspace` to recursively audit repository files while skipping `node_modules`, `.git`, build outputs, lock files, and binary assets.
 - **Standalone CLI:** Includes a fast, offline CLI with optional JSON output (`--json`) for local pre-commit hooks and CI pipelines.
-- **Resource Efficient:** Built to run smoothly even on resource-constrained development machines (such as 6 GB RAM laptops).
+- **Resource Efficient:** Lightweight and designed for low memory use, running efficiently across any development machine without background overhead.
 
 ## Included Detection Rules
 

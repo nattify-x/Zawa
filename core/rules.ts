@@ -4,7 +4,7 @@
  * All regex patterns MUST include the global ('g') flag and strictly bounded quantifiers.
  */
 
-import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid } from './entropy';
+import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid, isGenericRuleIgnored } from './entropy';
 import { Rule } from './types';
 
 export function maskSecret(secret: string): string {
@@ -65,9 +65,14 @@ export const DEFAULT_RULES: Rule[] = [
       if (body.includes('-----BEGIN') || body.includes('-----END')) {
         return false;
       }
-      const base64Chars = body.replace(/Proc-Type:[^\r\n\\]+/gi, '')
-                              .replace(/DEK-Info:[^\r\n\\]+/gi, '')
-                              .replace(/[^A-Za-z0-9+/=]/g, '');
+      // Standard optional encrypted PEM headers (Proc-Type, DEK-Info)
+      const withoutHeaders = body.replace(/Proc-Type:[^\r\n\\]+/gi, '').replace(/DEK-Info:[^\r\n\\]+/gi, '');
+      // Text between header and END must consist ONLY of base64 characters, whitespace and escaped newlines (\n, \r)
+      const cleaned = withoutHeaders.replace(/\\[rn]/g, '');
+      if (/[^A-Za-z0-9+/=\s]/.test(cleaned)) {
+        return false;
+      }
+      const base64Chars = cleaned.replace(/[^A-Za-z0-9+/=]/g, '');
       return base64Chars.length >= 100;
     },
     formatSnippet: (raw) => {
@@ -88,6 +93,9 @@ export const DEFAULT_RULES: Rule[] = [
     description: 'Hardcoded password literal discovered in source code or configuration.',
     filter: (match) => {
       const value = match[1] || '';
+      if (isGenericRuleIgnored(match, value)) {
+        return false;
+      }
       return isValidGenericSecret(value, 3.0);
     },
     formatSnippet: (raw, groups) => {
@@ -104,18 +112,38 @@ export const DEFAULT_RULES: Rule[] = [
     confidence: 'medium',
     cwe: 'CWE-798',
     cvss: 7.5,
-    pattern: /(?:["']?\b(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|[a-zA-Z0-9_]*(?:ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret))\b["']?)\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?/gi,
+    pattern: /(?:["']?\b[a-zA-Z0-9_]*(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret)[a-zA-Z0-9_]*\b["']?)\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?/gi,
     description: 'High-entropy secret or API key assignment in an environment file, configuration, or code.',
     filter: (match) => {
       const value = match[1] || '';
-      // Ignore hex addresses (0x + 40 hex), standard UUIDs, or pure hex hashes (32, 40, or 64 hex)
+
+      // 1. Secrets must consist of printable ASCII characters
+      if (/[^\x20-\x7E]/.test(value)) {
+        return false;
+      }
+
+      // 2. Reject UI label / translation / message prefixes (LABEL_, INVALID_, ERROR_, etc.)
+      const idMatch = match[0].match(/["']?([a-zA-Z0-9_]+)["']?\s*[:=]/);
+      const identifier = idMatch ? idMatch[1] : '';
+      if (/^(?:LABEL|INVALID|ERROR|TITLE|MSG|MESSAGE|DESC|DESCRIPTION|HELP|TOOLTIP|HINT|PLACEHOLDER|TEXT|BTN|BUTTON|ARIA)_/i.test(identifier)) {
+        return false;
+      }
+
+      // 3. Ignore commented-out lines, string concatenation, function calls, regex metacharacters
+      if (isGenericRuleIgnored(match, value)) {
+        return false;
+      }
+
+      // 4. Ignore hex addresses (0x + 40 hex), standard UUIDs, or pure hex hashes (32, 40, or 64 hex)
       if (isHexAddressOrHashOrUuid(value)) {
         return false;
       }
-      // Let specialized high-confidence rules handle their specific prefixes
+
+      // 5. Let specialized high-confidence rules handle their specific prefixes
       if (/^(?:sk-(?!ant-)|sk-ant-|hf_|gsk_|r8_|AIza|AKIA|gh[pousr]_|github_pat_|xox[baprs]-)/.test(value)) {
         return false;
       }
+
       return isValidGenericSecret(value, 3.0);
     },
     formatSnippet: (raw, groups) => {
@@ -371,18 +399,48 @@ export const DEFAULT_RULES: Rule[] = [
     confidence: 'medium',
     cwe: 'CWE-798',
     cvss: 7.5,
-    pattern: /(?:(?:[a-zA-Z0-9_$.]+\.)?(?:password|passwd|pwd|pass|token|secret|apiKey|apiSecret|secretKey|authToken|accessToken|totpSecret|otpSecret|totp_secret|otp_secret)\s*(?:===?|!==?)\s*["']([^"'\r\n\s]{6,256})["']|["']([^"'\r\n\s]{6,256})["']\s*(?:===?|!==?)\s*(?:[a-zA-Z0-9_$.]+\.)?(?:password|passwd|pwd|pass|token|secret|apiKey|apiSecret|secretKey|authToken|accessToken|totpSecret|otpSecret|totp_secret|otp_secret)\b)/gi,
+    pattern: /(?:(typeof\s+)?\b[a-zA-Z0-9_$.]*(?:password|passwd|pwd|pass|token|secret|apiKey|apiSecret|secretKey|authToken|accessToken|totpSecret|otpSecret|totp_secret|otp_secret)\b\s*(?:===?|!==?)\s*["']([^"'\r\n\s]{1,256})["']|["']([^"'\r\n\s]{1,256})["']\s*(?:===?|!==?)\s*(typeof\s+)?\b[a-zA-Z0-9_$.]*(?:password|passwd|pwd|pass|token|secret|apiKey|apiSecret|secretKey|authToken|accessToken|totpSecret|otpSecret|totp_secret|otp_secret)\b)/gi,
     description: 'Hardcoded credential literal discovered in a comparison expression.',
     filter: (match) => {
-      const value = match[1] || match[2] || '';
-      // Ignore hex addresses (0x + 40 hex), standard UUIDs, or pure hex hashes (32, 40, or 64 hex)
+      // 1. Ignore comparisons where the left side starts with typeof
+      if (match[1] || match[0].trim().startsWith('typeof')) {
+        return false;
+      }
+      if (match.input) {
+        const lineStart = match.input.lastIndexOf('\n', match.index) + 1;
+        const beforeText = match.input.slice(lineStart, match.index).trim();
+        if (/\btypeof\s*$/.test(beforeText)) {
+          return false;
+        }
+      }
+
+      const value = match[2] || match[3] || '';
+
+      // 2. Ignore literals shorter than 4 characters
+      if (value.length < 4) {
+        return false;
+      }
+
+      // 3. Ignore right-hand literal if it is a type name ("string", "object", "function", "number", "boolean", "undefined")
+      const TYPE_NAMES = new Set(['string', 'object', 'function', 'number', 'boolean', 'undefined']);
+      if (TYPE_NAMES.has(value.toLowerCase())) {
+        return false;
+      }
+
+      // 4. Ignore plain words with no digits or symbols that are all lowercase letters
+      if (/^[a-z]+$/.test(value)) {
+        return false;
+      }
+
+      // 5. Ignore hex addresses (0x + 40 hex), standard UUIDs, or pure hex hashes (32, 40, or 64 hex)
       if (isHexAddressOrHashOrUuid(value)) {
         return false;
       }
+
       return isValidGenericSecret(value, 3.0);
     },
     formatSnippet: (raw, groups) => {
-      const secret = groups[0] || groups[1];
+      const secret = groups[1] || groups[2];
       if (secret) {
         return raw.trim().replace(secret, maskSecret(secret));
       }

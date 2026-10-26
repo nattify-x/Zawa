@@ -2,7 +2,7 @@
   "name": "zawa",
   "displayName": "Zawa",
   "description": "Offline security scanner that guards your code before it leaves your machine.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "nattify-x",
   "repository": {
     "type": "git",
