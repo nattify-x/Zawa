@@ -1,0 +1,11 @@
+out
+node_modules
+.vscode-test
+*.vsix
+.DS_Store
+Thumbs.db
+sample-vault
+benchmark/planted/
+juice-*.txt
+juice-gitleaks.json
+nodegoat-*.txt

@@ -1,0 +1,618 @@
+[
+  {
+    "id": "TS-001",
+    "file": "aws-service.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-001",
+    "description": "AWS Access Key ID 1"
+  },
+  {
+    "id": "TS-002",
+    "file": "aws-service.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-001",
+    "description": "AWS Access Key ID 2"
+  },
+  {
+    "id": "TS-003",
+    "file": "aws-service.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-001",
+    "description": "AWS Access Key ID 3"
+  },
+  {
+    "id": "DC-001",
+    "file": "aws-service.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike AWS non-AKIA prefix (AKIB)"
+  },
+  {
+    "id": "DC-002",
+    "file": "aws-service.ts",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike AWS key with insufficient length"
+  },
+  {
+    "id": "DC-003",
+    "file": "aws-service.ts",
+    "line": 14,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "AWS key suppressed with inline zawa-ignore comment"
+  },
+  {
+    "id": "TS-004",
+    "file": "github-client.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-002",
+    "description": "GitHub Classic Personal Access Token"
+  },
+  {
+    "id": "TS-005",
+    "file": "github-client.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-002",
+    "description": "GitHub OAuth Access Token"
+  },
+  {
+    "id": "TS-006",
+    "file": "github-client.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-002",
+    "description": "GitHub Fine-Grained Personal Access Token (82 chars)"
+  },
+  {
+    "id": "DC-004",
+    "file": "github-client.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike GitHub token with wrong prefix (ghx_)"
+  },
+  {
+    "id": "DC-005",
+    "file": "github-client.ts",
+    "line": 13,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "GitHub token with preceding zawa-ignore comment"
+  },
+  {
+    "id": "DC-006",
+    "file": "github-client.ts",
+    "line": 15,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Placeholder GitHub token template ${...}"
+  },
+  {
+    "id": "TS-007",
+    "file": "payment-stripe.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-006",
+    "description": "Stripe Live Secret Key 1"
+  },
+  {
+    "id": "TS-008",
+    "file": "payment-stripe.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-006",
+    "description": "Stripe Live Secret Key 2"
+  },
+  {
+    "id": "TS-009",
+    "file": "payment-stripe.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-006",
+    "description": "Stripe Restricted Live Key"
+  },
+  {
+    "id": "DC-007",
+    "file": "payment-stripe.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Stripe Test Secret Key (sk_test_)"
+  },
+  {
+    "id": "DC-008",
+    "file": "payment-stripe.ts",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Stripe Live Key suppressed with inline zawa-ignore"
+  },
+  {
+    "id": "DC-009",
+    "file": "payment-stripe.ts",
+    "line": 14,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Placeholder Stripe template <STRIPE_KEY>"
+  },
+  {
+    "id": "TS-010",
+    "file": "slack-bot.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-007",
+    "description": "Slack Bot Token (xoxb-)"
+  },
+  {
+    "id": "TS-011",
+    "file": "slack-bot.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-007",
+    "description": "Slack User Token (xoxp-)"
+  },
+  {
+    "id": "TS-012",
+    "file": "slack-bot.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-007",
+    "description": "Slack App Token"
+  },
+  {
+    "id": "DC-010",
+    "file": "slack-bot.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike Slack invalid prefix (xoxe-)"
+  },
+  {
+    "id": "DC-011",
+    "file": "slack-bot.ts",
+    "line": 13,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Slack Token with preceding zawa-ignore comment"
+  },
+  {
+    "id": "DC-012",
+    "file": "slack-bot.ts",
+    "line": 15,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike Slack token with segments too short (5 chars vs min 10)"
+  },
+  {
+    "id": "TS-013",
+    "file": "google-cloud.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-008",
+    "description": "Google API Key 1"
+  },
+  {
+    "id": "TS-014",
+    "file": "google-cloud.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-008",
+    "description": "Google API Key 2"
+  },
+  {
+    "id": "TS-015",
+    "file": "google-cloud.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-008",
+    "description": "Google API Key 3"
+  },
+  {
+    "id": "DC-013",
+    "file": "google-cloud.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike Google key wrong prefix (AIzb)"
+  },
+  {
+    "id": "DC-014",
+    "file": "google-cloud.ts",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Google API key with inline zawa-ignore comment"
+  },
+  {
+    "id": "DC-015",
+    "file": "google-cloud.ts",
+    "line": 14,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Google API key placeholder with \"your_\""
+  },
+  {
+    "id": "TS-016",
+    "file": "jwt-tokens.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-009",
+    "description": "JSON Web Token (JWT) 1"
+  },
+  {
+    "id": "TS-017",
+    "file": "jwt-tokens.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-009",
+    "description": "JSON Web Token (JWT) 2"
+  },
+  {
+    "id": "TS-018",
+    "file": "jwt-tokens.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-009",
+    "description": "JSON Web Token (JWT) 3"
+  },
+  {
+    "id": "DC-016",
+    "file": "jwt-tokens.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Lookalike JWT with only 2 segments (truncated)"
+  },
+  {
+    "id": "DC-017",
+    "file": "jwt-tokens.ts",
+    "line": 13,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "JWT with preceding zawa-ignore comment"
+  },
+  {
+    "id": "DC-018",
+    "file": "jwt-tokens.ts",
+    "line": 15,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Plain dot-separated string that is not a JWT"
+  },
+  {
+    "id": "TS-019",
+    "file": "crypto-keys.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-003",
+    "description": "RSA Private Key Header Block"
+  },
+  {
+    "id": "TS-020",
+    "file": "crypto-keys.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-003",
+    "description": "OPENSSH Private Key Header Block"
+  },
+  {
+    "id": "TS-021",
+    "file": "crypto-keys.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-003",
+    "description": "EC Private Key Header Block"
+  },
+  {
+    "id": "DC-019",
+    "file": "crypto-keys.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Public Key Header Block (not private)"
+  },
+  {
+    "id": "DC-020",
+    "file": "crypto-keys.ts",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Certificate Header Block (not private)"
+  },
+  {
+    "id": "DC-021",
+    "file": "crypto-keys.ts",
+    "line": 14,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Private Key header with inline zawa-ignore comment"
+  },
+  {
+    "id": "TS-022",
+    "file": "database-config.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-011",
+    "description": "PostgreSQL URL with embedded high-entropy password"
+  },
+  {
+    "id": "TS-023",
+    "file": "database-config.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-011",
+    "description": "MySQL URL with embedded high-entropy password"
+  },
+  {
+    "id": "TS-024",
+    "file": "database-config.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-011",
+    "description": "MongoDB URL with embedded high-entropy password"
+  },
+  {
+    "id": "DC-022",
+    "file": "database-config.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Database URL without password credentials"
+  },
+  {
+    "id": "DC-023",
+    "file": "database-config.ts",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Database URL with placeholder password \"changeme\""
+  },
+  {
+    "id": "DC-024",
+    "file": "database-config.ts",
+    "line": 14,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Database URL with placeholder \"your_password\""
+  },
+  {
+    "id": "TS-025",
+    "file": "auth-passwords.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-004",
+    "description": "Hardcoded password with high Shannon entropy (3.52)"
+  },
+  {
+    "id": "TS-026",
+    "file": "auth-passwords.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-004",
+    "description": "Hardcoded password with high Shannon entropy (3.58)"
+  },
+  {
+    "id": "TS-027",
+    "file": "auth-passwords.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-004",
+    "description": "Hardcoded password with high Shannon entropy (3.65)"
+  },
+  {
+    "id": "DC-025",
+    "file": "auth-passwords.ts",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Placeholder password \"changeme\""
+  },
+  {
+    "id": "DC-026",
+    "file": "auth-passwords.ts",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Placeholder password \"sample_password\""
+  },
+  {
+    "id": "DC-027",
+    "file": "auth-passwords.ts",
+    "line": 14,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Low-entropy password with all repeated chars \"xxxxxxxxxxxx\""
+  },
+  {
+    "id": "TS-028",
+    "file": "environment.env",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": ".env-style API key with high Shannon entropy (3.82)"
+  },
+  {
+    "id": "TS-029",
+    "file": "environment.env",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": ".env-style secret key with high Shannon entropy (3.88)"
+  },
+  {
+    "id": "TS-030",
+    "file": "environment.env",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-005",
+    "description": ".env-style auth token with high Shannon entropy (3.91)"
+  },
+  {
+    "id": "DC-028",
+    "file": "environment.env",
+    "line": 10,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Placeholder API key \"your_api_key_here\""
+  },
+  {
+    "id": "DC-029",
+    "file": "environment.env",
+    "line": 12,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Placeholder secret with template syntax ${...}"
+  },
+  {
+    "id": "DC-030",
+    "file": "environment.env",
+    "line": 15,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "High-entropy secret suppressed with preceding zawa-ignore"
+  },
+  {
+    "id": "TS-031",
+    "file": "ai-services.ts",
+    "line": 4,
+    "type": "secret",
+    "expectedRule": "ZAWA-014",
+    "description": "OpenAI Project Service API Key (sk-proj-)"
+  },
+  {
+    "id": "TS-032",
+    "file": "ai-services.ts",
+    "line": 6,
+    "type": "secret",
+    "expectedRule": "ZAWA-015",
+    "description": "Anthropic Claude API Key (sk-ant-)"
+  },
+  {
+    "id": "TS-033",
+    "file": "ai-services.ts",
+    "line": 8,
+    "type": "secret",
+    "expectedRule": "ZAWA-016",
+    "description": "Hugging Face User Access Token (hf_)"
+  },
+  {
+    "id": "TS-034",
+    "file": "ai-services.ts",
+    "line": 10,
+    "type": "secret",
+    "expectedRule": "ZAWA-017",
+    "description": "Groq Cloud API Key (gsk_)"
+  },
+  {
+    "id": "TS-035",
+    "file": "ai-services.ts",
+    "line": 12,
+    "type": "secret",
+    "expectedRule": "ZAWA-018",
+    "description": "Replicate API Token (r8_)"
+  },
+  {
+    "id": "TS-036",
+    "file": "ai-services.ts",
+    "line": 14,
+    "type": "secret",
+    "expectedRule": "ZAWA-019",
+    "description": "Mistral AI API Key (mis_ prefix)"
+  },
+  {
+    "id": "TS-037",
+    "file": "ai-services.ts",
+    "line": 16,
+    "type": "secret",
+    "expectedRule": "ZAWA-020",
+    "description": "Cohere Platform API Key (coh_ prefix)"
+  },
+  {
+    "id": "DC-031",
+    "file": "ai-services.ts",
+    "line": 18,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "OpenAI key with placeholder changeme"
+  },
+  {
+    "id": "DC-032",
+    "file": "ai-services.ts",
+    "line": 20,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Anthropic key template syntax ${...}"
+  },
+  {
+    "id": "DC-033",
+    "file": "ai-services.ts",
+    "line": 22,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Hugging Face token suppressed with inline zawa-ignore"
+  },
+  {
+    "id": "DC-034",
+    "file": "ai-services.ts",
+    "line": 24,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Groq key placeholder with your_"
+  },
+  {
+    "id": "DC-035",
+    "file": "ai-services.ts",
+    "line": 27,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Replicate token with preceding zawa-ignore comment"
+  },
+  {
+    "id": "DC-036",
+    "file": "ai-services.ts",
+    "line": 29,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Mistral key referring to process.env code reference"
+  },
+  {
+    "id": "DC-037",
+    "file": "ai-services.ts",
+    "line": 31,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": "Cohere key with placeholder dummy"
+  },
+  {
+    "id": "TS-038",
+    "file": ".env",
+    "line": 1,
+    "type": "secret",
+    "expectedRule": "ZAWA-021",
+    "description": "Unignored .env file exposed in workspace root"
+  },
+  {
+    "id": "DC-038",
+    "file": ".env.example",
+    "line": 1,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": ".env.example template file is allowed to be committed"
+  },
+  {
+    "id": "DC-039",
+    "file": "ignored-vault/.env",
+    "line": 1,
+    "type": "decoy",
+    "expectedRule": null,
+    "description": ".env file explicitly covered by .gitignore in its directory"
+  }
+]
