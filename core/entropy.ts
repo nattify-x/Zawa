@@ -1,5 +1,5 @@
 /**
- * Shannon entropy, placeholder, and code reference detection utilities.
+ * Shannon entropy, placeholder, code reference, and format detection utilities.
  * Pure TypeScript: Zero external dependencies.
  */
 
@@ -29,6 +29,85 @@ export function calculateShannonEntropy(str: string): number {
 }
 
 /**
+ * Checks whether a key is a published / documented example key
+ * (such as AWS AKIAIOSFODNN7EXAMPLE).
+ */
+export function isDocumentedExampleKey(val: string): boolean {
+  if (!val) {
+    return false;
+  }
+  const trimmed = val.trim();
+  const upper = trimmed.toUpperCase();
+
+  // AWS documented example key: AKIAIOSFODNN7EXAMPLE or any AWS key containing EXAMPLE
+  if (/^(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}$/.test(upper) && upper.includes('EXAMPLE')) {
+    return true;
+  }
+
+  // Other published example token formats ending with EXAMPLE
+  if (/(?:AKIA|gh[pousr]_|sk_live_|sk-proj-|xox[baprs]-)[A-Za-z0-9_\-]{10,}EXAMPLE$/i.test(trimmed)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks whether a candidate secret value is a hex address (0x + 40 hex),
+ * a standard UUID, or a pure hex hash (32, 40, or 64 hex characters).
+ */
+export function isHexAddressOrHashOrUuid(val: string): boolean {
+  if (!val || val.length === 0) {
+    return false;
+  }
+  const trimmed = val.trim().replace(/^["'`]/, '').replace(/["'`]$/, '');
+
+  // 1. Ethereum / Hex address: 0x + 40 hex characters
+  if (/^0x[0-9a-fA-F]{40}$/.test(trimmed)) {
+    return true;
+  }
+
+  // 2. UUID: 8-4-4-4-12 hex characters
+  if (/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(trimmed)) {
+    return true;
+  }
+
+  // 3. Pure hex hash: exactly 32 (MD5), 40 (SHA-1), or 64 (SHA-256) hex characters
+  if (/^[0-9a-fA-F]{32}$/.test(trimmed) || /^[0-9a-fA-F]{40}$/.test(trimmed) || /^[0-9a-fA-F]{64}$/.test(trimmed)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Decodes a JWT payload offline and checks if its 'exp' claim is in the past.
+ */
+export function isJwtExpired(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return false;
+    }
+    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
+      base64 += '=';
+    }
+    const jsonStr = typeof Buffer !== 'undefined'
+      ? Buffer.from(base64, 'base64').toString('utf-8')
+      : atob(base64);
+    const payload = JSON.parse(jsonStr);
+    if (typeof payload.exp === 'number') {
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      return payload.exp < nowSeconds;
+    }
+  } catch {
+    // If decoding or parsing fails, treat as not expired
+  }
+  return false;
+}
+
+/**
  * Checks whether a candidate secret value matches placeholder patterns:
  * - Contains change, replace, todo, fixme, insert, example, your_, xxx, test, dummy, sample (case-insensitive)
  * - Contains '<' or '>' (template angle brackets)
@@ -38,6 +117,11 @@ export function calculateShannonEntropy(str: string): number {
 export function isPlaceholder(val: string): boolean {
   if (!val || val.length === 0) {
     return true;
+  }
+
+  // Documented example keys are specially reported at low confidence rather than dropped as placeholders
+  if (isDocumentedExampleKey(val)) {
+    return false;
   }
 
   const trimmed = val.trim();

@@ -4,7 +4,7 @@
  * All regex patterns MUST include the global ('g') flag and strictly bounded quantifiers.
  */
 
-import { isValidGenericSecret, isPlaceholder, isCodeReference } from './entropy';
+import { isValidGenericSecret, isPlaceholder, isCodeReference, isHexAddressOrHashOrUuid } from './entropy';
 import { Rule } from './types';
 
 export function maskSecret(secret: string): string {
@@ -44,7 +44,7 @@ export const DEFAULT_RULES: Rule[] = [
     formatSnippet: (raw, groups) => maskSecret(groups[0] || raw),
   },
 
-  // 3. Private Key Block
+  // 3. Private Key Block (Requires a real base64 body of >= 100 chars before END line)
   {
     id: 'ZAWA-003',
     name: 'Private Key Block',
@@ -52,9 +52,28 @@ export const DEFAULT_RULES: Rule[] = [
     confidence: 'high',
     cwe: 'CWE-312',
     cvss: 9.0,
-    pattern: /-----BEGIN (?:[A-Z0-9_-]{1,64}\s+)?PRIVATE KEY-----/g,
-    description: 'Exposed cryptographic private key header.',
-    formatSnippet: (raw) => raw.trim(),
+    pattern: /-----BEGIN (?:[A-Z0-9_\-]{1,64}\s+)?PRIVATE KEY-----(?:(?!-----BEGIN|-----END)[\s\S]){100,8000}?-----END (?:[A-Z0-9_\-]{1,64}\s+)?PRIVATE KEY-----/g,
+    description: 'Exposed cryptographic private key block with complete base64 body.',
+    filter: (match) => {
+      const fullBlock = match[0];
+      const headerMatch = fullBlock.match(/-----BEGIN [^\r\n]+?-----/);
+      const footerMatch = fullBlock.match(/-----END [^\r\n]+?-----/);
+      if (!headerMatch || !footerMatch) {
+        return false;
+      }
+      const body = fullBlock.slice(headerMatch[0].length, fullBlock.lastIndexOf(footerMatch[0]));
+      if (body.includes('-----BEGIN') || body.includes('-----END')) {
+        return false;
+      }
+      const base64Chars = body.replace(/Proc-Type:[^\r\n\\]+/gi, '')
+                              .replace(/DEK-Info:[^\r\n\\]+/gi, '')
+                              .replace(/[^A-Za-z0-9+/=]/g, '');
+      return base64Chars.length >= 100;
+    },
+    formatSnippet: (raw) => {
+      const firstLine = raw.split(/\r?\n|\\n/)[0] || raw;
+      return firstLine.trim();
+    },
   },
 
   // 4. Hardcoded Password (Generic with Entropy & Placeholder Filtering)
@@ -77,7 +96,7 @@ export const DEFAULT_RULES: Rule[] = [
     },
   },
 
-  // 5. Generic Secret / API Key (with Entropy & Placeholder Filtering)
+  // 5. Generic Secret / API Key (with Entropy, Placeholder & Hex/UUID Filtering)
   {
     id: 'ZAWA-005',
     name: '.env-Style Secret',
@@ -85,10 +104,14 @@ export const DEFAULT_RULES: Rule[] = [
     confidence: 'medium',
     cwe: 'CWE-798',
     cvss: 7.5,
-    pattern: /(?:["']?\b(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|[a-zA-Z0-9_]*(?:ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret))\b["']?)\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?/gi,
+    pattern: /(?:["']?\b(?:API_KEY|SECRET_KEY|AUTH_TOKEN|JWT_SECRET|ACCESS_TOKEN|PRIVATE_KEY|CLIENT_SECRET|TOTP_SECRET|OTP_SECRET|[a-zA-Z0-9_]*(?:ApiKey|apiSecret|secretKey|authToken|accessToken|clientSecret|totpSecret|otpSecret|totp_secret|otp_secret))\b["']?)\s*[:=]\s*["']?([^"'\r\n\s]{8,256})["']?/gi,
     description: 'High-entropy secret or API key assignment in an environment file, configuration, or code.',
     filter: (match) => {
       const value = match[1] || '';
+      // Ignore hex addresses (0x + 40 hex), standard UUIDs, or pure hex hashes (32, 40, or 64 hex)
+      if (isHexAddressOrHashOrUuid(value)) {
+        return false;
+      }
       // Let specialized high-confidence rules handle their specific prefixes
       if (/^(?:sk-(?!ant-)|sk-ant-|hf_|gsk_|r8_|AIza|AKIA|gh[pousr]_|github_pat_|xox[baprs]-)/.test(value)) {
         return false;
@@ -337,6 +360,33 @@ export const DEFAULT_RULES: Rule[] = [
     formatSnippet: (raw, groups) => {
       const secret = groups[0] || groups[1] || raw;
       return maskSecret(secret);
+    },
+  },
+
+  // 22. Hardcoded Credential in Comparison (ZAWA-022)
+  {
+    id: 'ZAWA-022',
+    name: 'Hardcoded Credential in Comparison',
+    severity: 'warning',
+    confidence: 'medium',
+    cwe: 'CWE-798',
+    cvss: 7.5,
+    pattern: /(?:(?:[a-zA-Z0-9_$.]+\.)?(?:password|passwd|pwd|pass|token|secret|apiKey|apiSecret|secretKey|authToken|accessToken|totpSecret|otpSecret|totp_secret|otp_secret)\s*(?:===?|!==?)\s*["']([^"'\r\n\s]{6,256})["']|["']([^"'\r\n\s]{6,256})["']\s*(?:===?|!==?)\s*(?:[a-zA-Z0-9_$.]+\.)?(?:password|passwd|pwd|pass|token|secret|apiKey|apiSecret|secretKey|authToken|accessToken|totpSecret|otpSecret|totp_secret|otp_secret)\b)/gi,
+    description: 'Hardcoded credential literal discovered in a comparison expression.',
+    filter: (match) => {
+      const value = match[1] || match[2] || '';
+      // Ignore hex addresses (0x + 40 hex), standard UUIDs, or pure hex hashes (32, 40, or 64 hex)
+      if (isHexAddressOrHashOrUuid(value)) {
+        return false;
+      }
+      return isValidGenericSecret(value, 3.0);
+    },
+    formatSnippet: (raw, groups) => {
+      const secret = groups[0] || groups[1];
+      if (secret) {
+        return raw.trim().replace(secret, maskSecret(secret));
+      }
+      return raw.trim();
     },
   },
 ];

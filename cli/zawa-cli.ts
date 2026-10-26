@@ -44,6 +44,7 @@ interface CliFileFinding {
   line: number;
   column?: number;
   snippet: string;
+  message?: string;
 }
 
 interface ConfidenceCount {
@@ -427,6 +428,7 @@ async function handleStagedScan(): Promise<void> {
           line: f.line,
           column: f.column,
           snippet: f.snippet,
+          message: f.message,
         });
       }
     } catch {
@@ -582,6 +584,7 @@ async function runCli(): Promise<void> {
               line: f.line,
               column: f.column,
               snippet: f.snippet,
+              message: f.message,
             });
           }
         }

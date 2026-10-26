@@ -109,6 +109,13 @@ function generateBenchmark() {
       description: 'AWS Access Key ID 3',
       code: `process.env.AWS_KEY = "${F.aws}ABCDEF1234567890";`,
     },
+    {
+      id: 'TS-039',
+      type: 'secret',
+      expectedRule: 'ZAWA-001',
+      description: 'AWS Documented Example Key (AKIAIOSFODNN7EXAMPLE)',
+      code: `const AWS_DOC_EXAMPLE = "${F.aws}IOSFODNN7EXAMPLE";`,
+    },
     // Decoys
     {
       id: 'DC-001',
@@ -336,6 +343,13 @@ function generateBenchmark() {
       description: 'JSON Web Token (JWT) 3',
       code: `const SERVICE_JWT = "${F.jwt}JhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.${F.jwt}zdWIiOiJzZXJ2aWNlIiwiYXVkIjoiYXBpIn0.TYzp_37WqXFfI46L0y_l7m_vWl6w7-T1r0Fh_7Hj5e4";`,
     },
+    {
+      id: 'TS-040',
+      type: 'secret',
+      expectedRule: 'ZAWA-009',
+      description: 'Expired JSON Web Token with past exp claim',
+      code: `const EXPIRED_AUTH_JWT = "${F.jwt}JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${F.jwt}zdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvZSIsImV4cCI6MTUxNDc2NDgwMH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";`,
+    },
     // Decoys
     {
       id: 'DC-016',
@@ -359,28 +373,32 @@ function generateBenchmark() {
   ]);
 
   // File 7: Cryptographic Private Keys
+  const rsaBody = "MIIEowIBAAKCAQEAz3u1sM2vYyXbKlH9F8wE7qN5tL1xZ6pC2vR4mK8oP3wA0sD9fG6hJ1kL4zX7cV9bN2mQ5rT8yU1wI3oP6aS4dF7gH9jK2lZ5xV8cN0mQ3rT6yU9wI2oP5aS8dF1gH4jK7lZ0xV3cN6mQ9rT";
+  const opensshBody = "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcnNhAAAAAwEAAQAAAYEA0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+  const ecBody = "MHcCAQEEIIn8n0v5W9oP1qR3sU5vW7xZ9bC1dF3gH5jK7lZ9xV1coAoGCCqGSM49AwEHoUQDQgAE0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
   buildFile('crypto-keys.ts', [
     // True Secrets
     {
       id: 'TS-019',
       type: 'secret',
       expectedRule: 'ZAWA-003',
-      description: 'RSA Private Key Header Block',
-      code: `const RSA_KEY_HEADER = "${F.privKey}RSA${F.privKeyEnd}";`,
+      description: 'RSA Private Key Block with full base64 body (>= 100 chars)',
+      code: `const RSA_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----\\n${rsaBody}\\n-----END RSA PRIVATE KEY-----";`,
     },
     {
       id: 'TS-020',
       type: 'secret',
       expectedRule: 'ZAWA-003',
-      description: 'OPENSSH Private Key Header Block',
-      code: `const OPENSSH_KEY_HEADER = "${F.privKey}OPENSSH${F.privKeyEnd}";`,
+      description: 'OPENSSH Private Key Block with full base64 body (>= 100 chars)',
+      code: `const OPENSSH_PRIVATE_KEY = "-----BEGIN OPENSSH PRIVATE KEY-----\\n${opensshBody}\\n-----END OPENSSH PRIVATE KEY-----";`,
     },
     {
       id: 'TS-021',
       type: 'secret',
       expectedRule: 'ZAWA-003',
-      description: 'EC Private Key Header Block',
-      code: `const EC_KEY_HEADER = "${F.privKey}EC${F.privKeyEnd}";`,
+      description: 'EC Private Key Block with full base64 body (>= 100 chars)',
+      code: `const EC_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\\n${ecBody}\\n-----END EC PRIVATE KEY-----";`,
     },
     // Decoys
     {
@@ -398,8 +416,20 @@ function generateBenchmark() {
     {
       id: 'DC-021',
       type: 'decoy',
-      description: 'Private Key header with inline zawa-ignore comment',
-      code: `const SUPPRESSED_KEY = "${F.privKey}RSA${F.privKeyEnd}"; // ${F.ignore}`,
+      description: 'Private Key header alone without body (must NOT be reported)',
+      code: `const RSA_HEADER_ALONE = "-----BEGIN RSA PRIVATE KEY-----";`,
+    },
+    {
+      id: 'DC-040',
+      type: 'decoy',
+      description: 'Private Key with short body (< 100 base64 chars)',
+      code: `const SHORT_KEY = "-----BEGIN RSA PRIVATE KEY-----\\nMIIEowIBAAKCAQEA\\n-----END RSA PRIVATE KEY-----";`,
+    },
+    {
+      id: 'DC-041',
+      type: 'decoy',
+      description: 'Full Private Key suppressed with inline zawa-ignore comment',
+      code: `const SUPPRESSED_KEY = "-----BEGIN RSA PRIVATE KEY-----\\n${rsaBody}\\n-----END RSA PRIVATE KEY-----"; // ${F.ignore}`,
     },
   ]);
 
@@ -517,6 +547,27 @@ function generateBenchmark() {
       description: '.env-style auth token with high Shannon entropy (3.91)',
       code: `AUTH_TOKEN="b8N#3vM$9xZ!5pL*2kQ&"`,
     },
+    {
+      id: 'TS-041',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'totpSecret assignment with high entropy',
+      code: `totpSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"`,
+    },
+    {
+      id: 'TS-042',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'otpSecret assignment with high Shannon entropy',
+      code: `otpSecret="N4X7#kM!9pB$wQ2@zL8*"`,
+    },
+    {
+      id: 'TS-043',
+      type: 'secret',
+      expectedRule: 'ZAWA-005',
+      description: 'totp_secret snake_case assignment with high Shannon entropy',
+      code: `totp_secret="m4K$9xP!2vL#7zQ*1wR&"`,
+    },
     // Decoys
     {
       id: 'DC-028',
@@ -536,6 +587,30 @@ function generateBenchmark() {
       description: 'High-entropy secret suppressed with preceding zawa-ignore',
       precedingComment: `# ${F.ignore}`,
       code: `AUTH_TOKEN="z9X#4mN$8vB!1pL*7kQ&"`,
+    },
+    {
+      id: 'DC-042',
+      type: 'decoy',
+      description: 'totpSecret assigned Ethereum hex address (0x + 40 hex)',
+      code: `totpSecret="0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"`,
+    },
+    {
+      id: 'DC-043',
+      type: 'decoy',
+      description: 'otpSecret assigned UUID (8-4-4-4-12 hex)',
+      code: `otpSecret="c56a4180-65aa-42ec-a945-5fd21dec0538"`,
+    },
+    {
+      id: 'DC-044',
+      type: 'decoy',
+      description: 'totp_secret assigned pure SHA-256 hex hash (64 hex)',
+      code: `totp_secret="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`,
+    },
+    {
+      id: 'DC-045',
+      type: 'decoy',
+      description: 'totpSecret assigned placeholder string',
+      code: `totpSecret="your_totp_secret_key"`,
     },
   ]);
 
@@ -634,6 +709,63 @@ function generateBenchmark() {
       type: 'decoy',
       description: 'Cohere key with placeholder dummy',
       code: `const DUMMY_COHERE = "${F.cohere}dummy_placeholder_token_cohere_1234567";`,
+    },
+  ]);
+
+  // File 13: Hardcoded Credential in Comparison (ZAWA-022)
+  buildFile('credential-comparisons.ts', [
+    // True Secrets
+    {
+      id: 'TS-044',
+      type: 'secret',
+      expectedRule: 'ZAWA-022',
+      description: 'Hardcoded password comparison with ===',
+      code: `if (password === "V9#qL$2mK!pZ7@wX") { return true; }`,
+    },
+    {
+      id: 'TS-045',
+      type: 'secret',
+      expectedRule: 'ZAWA-022',
+      description: 'Hardcoded req.body.password comparison with ==',
+      code: `if (req.body.password == "X7*kM!4pB#wQ8$zT") { return true; }`,
+    },
+    {
+      id: 'TS-046',
+      type: 'secret',
+      expectedRule: 'ZAWA-022',
+      description: 'Hardcoded token literal on left-hand side of === comparison',
+      code: `if ("s8F!mK9@wQ#zR2$v" === user.token) { return true; }`,
+    },
+    // Decoys
+    {
+      id: 'DC-046',
+      type: 'decoy',
+      description: 'Password comparison with placeholder "changeme"',
+      code: `if (password === "changeme") { return false; }`,
+    },
+    {
+      id: 'DC-047',
+      type: 'decoy',
+      description: 'Password comparison with Ethereum hex address (0x + 40 hex)',
+      code: `if (password === "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed") { return false; }`,
+    },
+    {
+      id: 'DC-048',
+      type: 'decoy',
+      description: 'req.body.password comparison with standard UUID',
+      code: `if (req.body.password == "c56a4180-65aa-42ec-a945-5fd21dec0538") { return false; }`,
+    },
+    {
+      id: 'DC-049',
+      type: 'decoy',
+      description: 'Secret comparison with pure hex MD5 hash (32 hex)',
+      code: `if (secret === "d41d8cd98f00b204e9800998ecf8427e") { return false; }`,
+    },
+    {
+      id: 'DC-050',
+      type: 'decoy',
+      description: 'Credential comparison suppressed with inline zawa-ignore comment',
+      code: `if (password === "K9$mX!8pQ#wZ4@ab") { return true; } // ${F.ignore}`,
     },
   ]);
 

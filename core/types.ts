@@ -16,6 +16,7 @@ export interface Finding {
   cvss: number;
   line: number;
   snippet: string;
+  message?: string;
   // Precise coordinate metadata for IDE highlighting (1-based)
   column?: number;
   endLine?: number;

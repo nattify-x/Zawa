@@ -3,6 +3,7 @@
  * Pure TypeScript scanning logic without VS Code imports.
  */
 
+import { isDocumentedExampleKey, isJwtExpired } from './entropy';
 import { DEFAULT_RULES } from './rules';
 import { Confidence, Finding, Rule } from './types';
 
@@ -267,12 +268,28 @@ export function scanText(
 
       // Format snippet
       const captureGroups = match.slice(1);
-      const snippet = rule.formatSnippet
+      let snippet = rule.formatSnippet
         ? rule.formatSnippet(matchedString, captureGroups)
         : matchedString.slice(0, 60);
 
       // Findings in test/fixture or doc/template paths have their confidence lowered by one level
-      const confidence = shouldDemoteConfidence ? lowerConfidence(rule.confidence) : rule.confidence;
+      let confidence = shouldDemoteConfidence ? lowerConfidence(rule.confidence) : rule.confidence;
+
+      // Documented example keys: report at low confidence with "documented example key"
+      let extraMessage: string | undefined;
+      const candidateSecret = captureGroups[0] || matchedString;
+      if (isDocumentedExampleKey(matchedString) || isDocumentedExampleKey(candidateSecret)) {
+        confidence = 'low';
+        extraMessage = 'documented example key';
+        snippet = `${snippet} (documented example key)`;
+      }
+
+      // JWT expiration check: decode offline and demote by one level if expired
+      if (rule.id === 'ZAWA-009' && isJwtExpired(matchedString)) {
+        confidence = lowerConfidence(confidence);
+        extraMessage = extraMessage ? `${extraMessage}, expired` : 'expired';
+        snippet = `${snippet} (expired)`;
+      }
 
       findings.push({
         ruleId: rule.id,
@@ -286,6 +303,7 @@ export function scanText(
         endLine: endPos.line,
         endColumn: endPos.column,
         snippet,
+        message: extraMessage,
       });
 
       // Stop scanning this rule if cap reached
